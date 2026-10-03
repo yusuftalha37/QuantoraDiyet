@@ -1,0 +1,76 @@
+name: Android APK derle
+
+# APK, GitHub'ın sunucularında derlenir (yerel internet/araç gerekmez).
+# Çalıştırmak için: GitHub → Actions → "Android APK derle" → Run workflow.
+# Push'ta da otomatik çalışır. Bittiğinde APK, çalışmanın "Artifacts"
+# bölümünden indirilir.
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "Backend API adresi (örn. https://api.alanadiniz.com/api/v1). Boşsa emülatör varsayılanı kullanılır."
+        required: false
+        default: ""
+      build_type:
+        description: "APK türü"
+        required: true
+        default: "debug"
+        type: choice
+        options: [debug, release]
+  push:
+    branches: ["claude/internet-usage-reduction-1kuuzs"]
+    paths: ["mobile/**", ".github/workflows/build-apk.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java kurulumu
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Flutter kurulumu
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Android platform klasörünü üret
+        run: flutter create --platforms=android --org com.quantora --project-name quantoradiyet .
+
+      - name: INTERNET iznini ekle
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "android.permission.INTERNET" "$MANIFEST"; then
+            sed -i 's#<manifest\(.*\)>#<manifest\1>\n    <uses-permission android:name="android.permission.INTERNET"/>#' "$MANIFEST"
+          fi
+          echo "----- AndroidManifest.xml -----"
+          cat "$MANIFEST"
+
+      - name: Bağımlılıkları al
+        run: flutter pub get
+
+      - name: APK derle
+        run: |
+          BT="${{ github.event.inputs.build_type || 'debug' }}"
+          API="${{ github.event.inputs.api_base_url }}"
+          ARGS=""
+          if [ -n "$API" ]; then ARGS="--dart-define=API_BASE_URL=$API"; fi
+          echo "Derleme türü: $BT, API: ${API:-<varsayılan>}"
+          flutter build apk --$BT $ARGS
+
+      - name: APK'yı yükle (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: quantoradiyet-apk
+          path: mobile/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 14
