@@ -1,0 +1,41 @@
+# ---- Node / Backend ----
+node_modules/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+
+# ---- Secrets / keys ----
+*.pem
+*.key
+*.keystore
+*.jks
+google-services.json
+service-account*.json
+
+# ---- Flutter / Mobile ----
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.pub-cache/
+mobile/.pub/
+mobile/ios/Pods/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/app/upload-keystore.jks
+mobile/**/GeneratedPluginRegistrant.*
+
+# ---- Editor / OS ----
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db

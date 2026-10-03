@@ -1,0 +1,6 @@
+# mobile/android/key.properties olarak kopyalayın ve doldurun.
+# BU DOSYANIN GERÇEĞİ REPOYA GİRMEZ (.gitignore).
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+storeFile=/absolute/path/to/upload-keystore.jks
