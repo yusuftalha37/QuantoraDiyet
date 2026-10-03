@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../services/api_client.dart';
 import '../models/meal_plan.dart';
+import '../demo_data.dart';
 import 'plan_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -25,6 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
+    if (context.read<AppState>().demo) {
+      setState(() {
+        _targets = DemoData.targets;
+        _history = [];
+        _loading = false;
+      });
+      return;
+    }
     try {
       final targets = await _api.get('/targets');
       final history = await _api.get('/plans');
@@ -46,6 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => const _GenerateSheet(),
     );
     if (choice == null || !mounted) return;
+
+    // Demo modu: ağ çağrısı yok, plan yerel örnek veriden üretilir.
+    if (context.read<AppState>().demo) {
+      final plan = DemoData.buildPlan(choice.mode, choice.period);
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlanScreen(plan: plan)));
+      return;
+    }
 
     showDialog(
       context: context,
@@ -110,6 +126,29 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             if (_loading) const LinearProgressIndicator(),
+            if (state.demo)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Demo modu: veriler örnektir, backend’e bağlanılmaz.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (_targets != null) _TargetsCard(targets: _targets!),
             const SizedBox(height: 20),
             Text('Planlarım', style: Theme.of(context).textTheme.titleLarge),

@@ -15,6 +15,19 @@ class AppState extends ChangeNotifier {
   bool onboardingComplete = false;
   Profile? profile;
 
+  /// Demo modu: backend olmadan uygulamayı gezmek için. Hiçbir ağ çağrısı yapılmaz.
+  bool demo = false;
+
+  void enterDemo() {
+    demo = true;
+    displayName = 'Demo Kullanıcı';
+    email = 'demo@quantora.app';
+    profile = null;
+    onboardingComplete = false;
+    status = AuthStatus.signedIn;
+    notifyListeners();
+  }
+
   /// Called at startup: if we have a stored session, confirm it with the server.
   Future<void> bootstrap() async {
     final token = await _store.accessToken;
@@ -63,13 +76,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> saveProfile(Profile p) async {
-    await _api.patch('/profile', body: p.toJson());
+    if (!demo) await _api.patch('/profile', body: p.toJson());
     profile = p;
     onboardingComplete = true;
     notifyListeners();
   }
 
   Future<void> savePantry(List<Map<String, String>> items) async {
+    if (demo) return;
     await _api.patch('/pantry', body: {'items': items});
   }
 
@@ -88,6 +102,7 @@ class AppState extends ChangeNotifier {
     email = null;
     profile = null;
     onboardingComplete = false;
+    demo = false;
     notifyListeners();
   }
 }

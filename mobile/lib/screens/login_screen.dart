@@ -104,6 +104,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             MaterialPageRoute(builder: (_) => const RegisterScreen())),
                     child: const Text('Hesabın yok mu? Kayıt ol'),
                   ),
+                  const SizedBox(height: 4),
+                  OutlinedButton.icon(
+                    onPressed: _loading ? null : () => context.read<AppState>().enterDemo(),
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: const Text('Backend olmadan demo olarak incele'),
+                  ),
                 ],
               ),
             ),
