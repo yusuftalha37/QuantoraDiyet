@@ -62,12 +62,13 @@ jobs:
 
       - name: APK derle
         run: |
-          BT="${{ github.event.inputs.build_type || 'debug' }}"
+          BT="${{ github.event.inputs.build_type || 'release' }}"
           API="${{ github.event.inputs.api_base_url }}"
           ARGS=""
           if [ -n "$API" ]; then ARGS="--dart-define=API_BASE_URL=$API"; fi
           echo "Derleme türü: $BT, API: ${API:-<varsayılan>}"
-          flutter build apk --$BT $ARGS
+          # split-per-abi: her işlemci mimarisine ayrı, küçük APK üretir.
+          flutter build apk --$BT --split-per-abi $ARGS
 
       - name: APK'yı yükle (artifact)
         uses: actions/upload-artifact@v4
