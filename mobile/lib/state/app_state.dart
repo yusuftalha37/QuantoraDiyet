@@ -22,8 +22,19 @@ class AppState extends ChangeNotifier {
     demo = true;
     displayName = 'Demo Kullanıcı';
     email = 'demo@quantora.app';
-    profile = null;
-    onboardingComplete = false;
+    // Varsayılan bir profil ver: demo doğrudan ana ekrana gider, takılmaz.
+    profile = Profile(
+      sex: 'female',
+      birthYear: 1995,
+      heightCm: 170,
+      weightKg: 70,
+      activityLevel: 'moderate',
+      goal: 'lose',
+      dietType: 'omnivore',
+      allergies: const [],
+      dislikedFoods: const [],
+    );
+    onboardingComplete = true;
     status = AuthStatus.signedIn;
     notifyListeners();
   }

@@ -39,8 +39,6 @@ class _DaysTab extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Chip(label: Text(plan.sourceLabel), visualDensity: VisualDensity.compact),
-                    const SizedBox(width: 8),
                     Chip(label: Text('${plan.targetCalories} kcal/gün'), visualDensity: VisualDensity.compact),
                   ],
                 ),

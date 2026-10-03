@@ -5,6 +5,7 @@ import '../services/api_client.dart';
 import '../models/meal_plan.dart';
 import '../demo_data.dart';
 import 'plan_screen.dart';
+import 'onboarding_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -109,6 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Merhaba, ${state.displayName ?? ''}'),
         actions: [
           IconButton(
+            tooltip: 'Bilgilerim',
+            icon: const Icon(Icons.tune),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+            ),
+          ),
+          IconButton(
             tooltip: 'Çıkış',
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AppState>().logout(),
@@ -117,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _generate,
-        icon: const Icon(Icons.auto_awesome),
+        icon: const Icon(Icons.restaurant_menu),
         label: const Text('Plan oluştur'),
       ),
       body: RefreshIndicator(
@@ -272,7 +280,7 @@ class _GenerateSheetState extends State<_GenerateSheet> {
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: () => Navigator.of(context).pop(_GenChoice(_mode, _period)),
-            icon: const Icon(Icons.auto_awesome),
+            icon: const Icon(Icons.check),
             label: const Text('Oluştur'),
           ),
         ],

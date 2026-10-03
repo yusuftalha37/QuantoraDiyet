@@ -62,7 +62,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
       await state.saveProfile(profile);
       await state.savePantry(_pantry.map((e) => {'name': e}).toList());
-      // Returning updates onboardingComplete; root re-routes to HomeScreen.
+      // Ana ekrandan açıldıysa geri dön; _Root'tan geldiyse onboardingComplete
+      // güncellendiği için otomatik olarak HomeScreen'e yönlenir.
+      if (mounted && Navigator.of(context).canPop()) Navigator.of(context).pop();
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
