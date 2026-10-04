@@ -51,16 +51,31 @@ class _DayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         shape: const Border(),
-        title: Text(day.label, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: Text('${day.meals.length} öğün'),
+        initiallyExpanded: day.day == 1,
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: const Text('📅', style: TextStyle(fontSize: 18)),
+        ),
+        title: Text(day.label,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        subtitle: Text('${day.meals.length} öğün önerisi'),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: day.meals.map((m) => _MealTile(meal: m)).toList(),
       ),
     );
   }
 }
+
+String _mealEmoji(String type) => switch (type) {
+      'breakfast' => '🍳',
+      'lunch' => '🍲',
+      'dinner' => '🍽️',
+      'snack' => '🍎',
+      _ => '🥄',
+    };
 
 class _MealTile extends StatelessWidget {
   final Meal meal;
@@ -73,8 +88,26 @@ class _MealTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('${meal.typeLabel}: ${meal.name}',
-              style: Theme.of(context).textTheme.titleSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_mealEmoji(meal.type), style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(meal.typeLabel,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            )),
+                    Text(meal.name, style: Theme.of(context).textTheme.titleSmall),
+                  ],
+                ),
+              ),
+            ],
+          ),
           if (meal.ingredients.isNotEmpty) ...[
             const SizedBox(height: 6),
             Wrap(

@@ -4,6 +4,7 @@ import '../state/app_state.dart';
 import '../services/api_client.dart';
 import '../models/meal_plan.dart';
 import '../demo_data.dart';
+import '../widgets/cooking_loader.dart';
 import 'plan_screen.dart';
 import 'onboarding_screen.dart';
 
@@ -50,35 +51,29 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => const _PeriodSheet(),
     );
     if (period == null || !mounted) return;
+    final demo = context.read<AppState>().demo;
 
-    // Demo modu: ağ çağrısı yok, öneri yerel örnek veriden üretilir.
-    if (context.read<AppState>().demo) {
-      final plan = DemoData.buildPlan('daily', period);
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlanScreen(plan: plan)));
+    // Eğlenceli "aşçı" bekleme ekranı; öneri hazırlanırken gösterilir.
+    final outcome = await Navigator.of(context).push<LoaderOutcome>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CookingLoaderScreen(
+          task: () async {
+            if (demo) return DemoData.buildPlan('daily', period);
+            final data = await _api.post('/plans', body: {'mode': 'daily', 'period': period});
+            return MealPlan.fromResponse(data);
+          },
+        ),
+      ),
+    );
+    if (!mounted || outcome == null) return;
+    if (outcome.error != null || outcome.plan == null) {
+      _showError('Öneri alınamadı. Bağlantıyı kontrol edin.');
       return;
     }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-    try {
-      final data = await _api.post('/plans', body: {'mode': 'daily', 'period': period});
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      final plan = MealPlan.fromResponse(data);
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlanScreen(plan: plan)));
-      _load();
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showError(e.message);
-    } catch (_) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showError('Öneri alınamadı. Bağlantıyı kontrol edin.');
-    }
+    await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PlanScreen(plan: outcome.plan!)));
+    if (!demo && mounted) _load();
   }
 
   void _showError(String msg) {
@@ -156,16 +151,33 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('Önceki önerilerim', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             if (_history.isEmpty && !_loading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text('Henüz öneri yok. "Yemek öner"e dokun.')),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Center(
+                  child: Column(
+                    children: [
+                      const Text('🥘', style: TextStyle(fontSize: 48)),
+                      const SizedBox(height: 12),
+                      Text('Henüz öneri yok',
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      Text('"Yemek öner"e dokun, mutfağa koyulalım!',
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                  ),
+                ),
               ),
             ..._history.map((p) => Card(
+                  clipBehavior: Clip.antiAlias,
                   child: ListTile(
-                    leading: const Icon(Icons.restaurant),
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      child: const Text('🍽️', style: TextStyle(fontSize: 20)),
+                    ),
                     title: Text('${_periodLabel(p['period']?.toString())} önerileri'),
                     subtitle: Text(p['summary']?.toString() ?? '',
                         maxLines: 2, overflow: TextOverflow.ellipsis),
+                    trailing: const Icon(Icons.chevron_right),
                     onTap: () => _openPlan(p['id'].toString()),
                   ),
                 )),
@@ -190,35 +202,53 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.primaryContainer,
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Icon(Icons.soup_kitchen, size: 40, color: scheme.onPrimaryContainer),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Bugün ne pişireyim?',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: scheme.onPrimaryContainer,
-                            )),
-                    const SizedBox(height: 4),
-                    Text('Evindeki malzemelere göre öneri al',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: scheme.onPrimaryContainer,
-                            )),
-                  ],
-                ),
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [scheme.primary, scheme.tertiary],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
-              Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                const Text('🍳', style: TextStyle(fontSize: 40)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Bugün ne pişireyim?',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: scheme.onPrimary,
+                                fontWeight: FontWeight.bold,
+                              )),
+                      const SizedBox(height: 4),
+                      Text('Evindeki malzemelere göre öneri al',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: scheme.onPrimary.withOpacity(0.9),
+                              )),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_rounded, color: scheme.onPrimary),
+              ],
+            ),
           ),
         ),
       ),
