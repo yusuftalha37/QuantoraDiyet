@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../models/profile.dart';
 import '../services/api_client.dart';
+import '../pantry_catalog.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -146,15 +147,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Evde bulunan malzemeleri ekle. Planların önce bunlarla hazırlanır.'),
+                const Text(
+                  'Evdeki malzemeleri kategorilerden seç. Planların önce bunlarla '
+                  'hazırlanır; listede olmayanı aşağıdan elle ekleyebilirsin.',
+                ),
                 const SizedBox(height: 8),
-                _chipInput('Malzeme ekle (örn. yumurta)', _pantryInput, _pantry),
+                Text('Seçili: ${_pantry.length} malzeme',
+                    style: Theme.of(context).textTheme.labelMedium),
+                const SizedBox(height: 8),
+                ...kPantryCatalog.map(_categorySection),
+                const Divider(height: 24),
+                _chipInput('Listede yok mu? Elle ekle', _pantryInput, _pantry),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
                   Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categorySection(PantryCategory cat) {
+    final selectedInCat = cat.items.where(_pantry.contains).length;
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ExpansionTile(
+        shape: const Border(),
+        leading: Icon(cat.icon),
+        title: Text(cat.title),
+        subtitle: selectedInCat > 0 ? Text('$selectedInCat seçili') : null,
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: cat.items.map((item) {
+              final selected = _pantry.contains(item);
+              return FilterChip(
+                label: Text(item),
+                selected: selected,
+                onSelected: (on) => setState(() {
+                  if (on) {
+                    if (!_pantry.contains(item)) _pantry.add(item);
+                  } else {
+                    _pantry.remove(item);
+                  }
+                }),
+              );
+            }).toList(),
           ),
         ],
       ),
