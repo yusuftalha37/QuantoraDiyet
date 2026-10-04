@@ -15,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _api = ApiClient.instance;
-  Map<String, dynamic>? _targets;
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
 
@@ -29,19 +28,14 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _loading = true);
     if (context.read<AppState>().demo) {
       setState(() {
-        _targets = DemoData.targets;
         _history = [];
         _loading = false;
       });
       return;
     }
     try {
-      final targets = await _api.get('/targets');
       final history = await _api.get('/plans');
-      setState(() {
-        _targets = targets;
-        _history = (history['plans'] as List? ?? []).cast<Map<String, dynamic>>();
-      });
+      setState(() => _history = (history['plans'] as List? ?? []).cast<Map<String, dynamic>>());
     } catch (_) {
       // leave UI usable even if load fails
     } finally {
@@ -49,17 +43,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _generate() async {
-    final choice = await showModalBottomSheet<_GenChoice>(
+  Future<void> _suggest() async {
+    final period = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
-      builder: (_) => const _GenerateSheet(),
+      builder: (_) => const _PeriodSheet(),
     );
-    if (choice == null || !mounted) return;
+    if (period == null || !mounted) return;
 
-    // Demo modu: ağ çağrısı yok, plan yerel örnek veriden üretilir.
+    // Demo modu: ağ çağrısı yok, öneri yerel örnek veriden üretilir.
     if (context.read<AppState>().demo) {
-      final plan = DemoData.buildPlan(choice.mode, choice.period);
+      final plan = DemoData.buildPlan('daily', period);
       await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlanScreen(plan: plan)));
       return;
     }
@@ -70,9 +64,9 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
     try {
-      final data = await _api.post('/plans', body: {'mode': choice.mode, 'period': choice.period});
+      final data = await _api.post('/plans', body: {'mode': 'daily', 'period': period});
       if (!mounted) return;
-      Navigator.of(context).pop(); // close loader
+      Navigator.of(context).pop();
       final plan = MealPlan.fromResponse(data);
       await Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlanScreen(plan: plan)));
       _load();
@@ -83,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (!mounted) return;
       Navigator.of(context).pop();
-      _showError('Plan oluşturulamadı. Bağlantıyı kontrol edin.');
+      _showError('Öneri alınamadı. Bağlantıyı kontrol edin.');
     }
   }
 
@@ -98,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => PlanScreen(plan: MealPlan.fromResponse(data))));
     } catch (_) {
-      _showError('Plan açılamadı.');
+      _showError('Öneri açılamadı.');
     }
   }
 
@@ -110,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Merhaba, ${state.displayName ?? ''}'),
         actions: [
           IconButton(
-            tooltip: 'Bilgilerim',
+            tooltip: 'Mutfağım',
             icon: const Icon(Icons.tune),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const OnboardingScreen()),
@@ -124,9 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _generate,
+        onPressed: _suggest,
         icon: const Icon(Icons.restaurant_menu),
-        label: const Text('Plan oluştur'),
+        label: const Text('Yemek öner'),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -149,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Demo modu: veriler örnektir, backend’e bağlanılmaz.',
+                          'Demo modu: öneriler örnektir, backend’e bağlanılmaz.',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
@@ -157,23 +151,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            if (_targets != null) _TargetsCard(targets: _targets!),
+            _HeroCard(onTap: _suggest),
             const SizedBox(height: 20),
-            Text('Planlarım', style: Theme.of(context).textTheme.titleLarge),
+            Text('Önceki önerilerim', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             if (_history.isEmpty && !_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: Text('Henüz plan yok. "Plan oluştur"a dokun.')),
+                child: Center(child: Text('Henüz öneri yok. "Yemek öner"e dokun.')),
               ),
             ..._history.map((p) => Card(
                   child: ListTile(
-                    leading: Icon(p['mode'] == 'diet' ? Icons.monitor_heart_outlined : Icons.restaurant),
-                    title: Text(_periodLabel(p['period']?.toString()) +
-                        (p['mode'] == 'diet' ? ' diyet planı' : ' yemek planı')),
+                    leading: const Icon(Icons.restaurant),
+                    title: Text('${_periodLabel(p['period']?.toString())} önerileri'),
                     subtitle: Text(p['summary']?.toString() ?? '',
                         maxLines: 2, overflow: TextOverflow.ellipsis),
-                    trailing: Text('${p['targetCalories'] ?? ''} kcal'),
                     onTap: () => _openPlan(p['id'].toString()),
                   ),
                 )),
@@ -184,66 +176,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _periodLabel(String? period) => switch (period) {
-        'daily' => 'Günlük',
-        'weekly' => 'Haftalık',
-        'monthly' => 'Aylık',
+        'daily' => 'Bugün',
+        'weekly' => 'Bu hafta',
+        'monthly' => 'Bu ay',
         _ => '',
       };
 }
 
-class _TargetsCard extends StatelessWidget {
-  final Map<String, dynamic> targets;
-  const _TargetsCard({required this.targets});
+class _HeroCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const _HeroCard({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final macros = targets['macros'] as Map<String, dynamic>? ?? {};
+    final scheme = Theme.of(context).colorScheme;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Günlük hedefin', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _stat(context, '${targets['targetCalories'] ?? '-'}', 'kcal'),
-                _stat(context, '${macros['proteinG'] ?? '-'} g', 'Protein'),
-                _stat(context, '${macros['carbsG'] ?? '-'} g', 'Karbonhidrat'),
-                _stat(context, '${macros['fatG'] ?? '-'} g', 'Yağ'),
-              ],
-            ),
-          ],
+      color: scheme.primaryContainer,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Icon(Icons.soup_kitchen, size: 40, color: scheme.onPrimaryContainer),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Bugün ne pişireyim?',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: scheme.onPrimaryContainer,
+                            )),
+                    const SizedBox(height: 4),
+                    Text('Evindeki malzemelere göre öneri al',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: scheme.onPrimaryContainer,
+                            )),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _stat(BuildContext context, String value, String label) => Column(
-        children: [
-          Text(value, style: Theme.of(context).textTheme.titleLarge),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      );
 }
 
-class _GenChoice {
-  final String mode;
-  final String period;
-  _GenChoice(this.mode, this.period);
-}
-
-class _GenerateSheet extends StatefulWidget {
-  const _GenerateSheet();
+class _PeriodSheet extends StatefulWidget {
+  const _PeriodSheet();
   @override
-  State<_GenerateSheet> createState() => _GenerateSheetState();
+  State<_PeriodSheet> createState() => _PeriodSheetState();
 }
 
-class _GenerateSheetState extends State<_GenerateSheet> {
-  String _mode = 'diet';
-  String _period = 'weekly';
+class _PeriodSheetState extends State<_PeriodSheet> {
+  String _period = 'daily';
 
   @override
   Widget build(BuildContext context) {
@@ -253,35 +243,22 @@ class _GenerateSheetState extends State<_GenerateSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ne hazırlayalım?', style: Theme.of(context).textTheme.titleLarge),
+          Text('Ne kadarlık öneri?', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
-          const Text('Tür'),
-          const SizedBox(height: 8),
           SegmentedButton<String>(
             segments: const [
-              ButtonSegment(value: 'diet', label: Text('Diyet'), icon: Icon(Icons.monitor_heart_outlined)),
-              ButtonSegment(value: 'daily', label: Text('Günlük yemek'), icon: Icon(Icons.restaurant)),
-            ],
-            selected: {_mode},
-            onSelectionChanged: (s) => setState(() => _mode = s.first),
-          ),
-          const SizedBox(height: 20),
-          const Text('Süre'),
-          const SizedBox(height: 8),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'daily', label: Text('Günlük')),
-              ButtonSegment(value: 'weekly', label: Text('Haftalık')),
-              ButtonSegment(value: 'monthly', label: Text('Aylık')),
+              ButtonSegment(value: 'daily', label: Text('Bugün')),
+              ButtonSegment(value: 'weekly', label: Text('Bu hafta')),
+              ButtonSegment(value: 'monthly', label: Text('Bu ay')),
             ],
             selected: {_period},
             onSelectionChanged: (s) => setState(() => _period = s.first),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: () => Navigator.of(context).pop(_GenChoice(_mode, _period)),
-            icon: const Icon(Icons.check),
-            label: const Text('Oluştur'),
+            onPressed: () => Navigator.of(context).pop(_period),
+            icon: const Icon(Icons.restaurant_menu),
+            label: const Text('Öner'),
           ),
         ],
       ),

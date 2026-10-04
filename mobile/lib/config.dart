@@ -10,6 +10,6 @@ class AppConfig {
     defaultValue: 'http://10.0.2.2:4000/api/v1',
   );
 
-  static const String appName = 'QuantoraDiyet';
+  static const String appName = 'Bugün Ne Pişirsem?';
   static const Duration requestTimeout = Duration(seconds: 35);
 }

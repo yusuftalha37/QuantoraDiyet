@@ -1,20 +1,8 @@
 import type { MealPlanProvider } from './provider.js';
 import type { MealPlan, Meal, PlanContext } from './types.js';
-import { DISHES, type Dish, type DietTag, type MealType } from './foods.js';
+import { DISHES, type Dish, type DietTag } from './foods.js';
 
 const DAY_LABELS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-
-/** Hedef kalorinin öğünlere dağılımı. */
-const MEAL_SPLIT: Record<MealType, number> = {
-  breakfast: 0.25,
-  lunch: 0.35,
-  dinner: 0.3,
-  snack: 0.1,
-};
-
-/** Bir porsiyonun ölçeklenebileceği alt/üst sınır (gerçekçi tutmak için). */
-const MIN_SCALE = 0.5;
-const MAX_SCALE = 2.0;
 
 /** Turkish-aware normalisation for robust ingredient/allergy matching. */
 const norm = (s: string) => s.toLocaleLowerCase('tr').trim();
@@ -70,39 +58,25 @@ function pantryCoverage(dish: Dish, pantry: Set<string>): number {
   return have / dish.ingredients.length;
 }
 
-/** Porsiyonu gerçekçi 0.25'lik adımlara yuvarla. */
-function roundScale(raw: number): number {
-  const clamped = Math.min(MAX_SCALE, Math.max(MIN_SCALE, raw));
-  return Math.round(clamped * 4) / 4;
-}
-
-function scaledMeal(dish: Dish, scale: number): Meal {
-  const name = scale === 1 ? dish.name : `${dish.name} (~${scale} porsiyon)`;
+function toMeal(dish: Dish): Meal {
   return {
     type: dish.type,
-    name,
+    name: dish.name,
     ingredients: dish.ingredients,
     recipe: dish.recipe,
-    calories: Math.round(dish.calories * scale),
-    protein_g: Math.round(dish.protein_g * scale),
-    carbs_g: Math.round(dish.carbs_g * scale),
-    fat_g: Math.round(dish.fat_g * scale),
+    calories: dish.calories,
+    protein_g: dish.protein_g,
+    carbs_g: dish.carbs_g,
+    fat_g: dish.fat_g,
   };
 }
 
-interface Candidate {
-  dish: Dish;
-  scale: number;
-  score: number;
-}
-
 /**
- * Gelişmiş, ağ gerektirmeyen plan motoru.
+ * Ağ gerektirmeyen "ne pişireyim?" öneri motoru.
  *
- * Her gün için öğünleri kalori bütçesine göre dağıtır; her slot için adayları
- * çok kriterli bir skorla değerlendirir (kalori uyumu, evdeki malzeme kapsamı,
- * günün protein açığını kapatma, çeşitlilik ve sevilmeyen cezası), porsiyonu
- * hedefe göre ölçekler. Deterministiktir: aynı girdi aynı planı verir.
+ * Her gün için kahvaltı, öğle ve akşam yemeği seçer. Seçim; evdeki malzeme
+ * kapsamı, çeşitlilik (günler arası tekrar cezası) ve sevilmeyen yiyecek
+ * cezasıyla yapılır. Deterministiktir: aynı girdi aynı öneriyi verir.
  */
 export class FallbackProvider implements MealPlanProvider {
   readonly name = 'fallback' as const;
@@ -117,7 +91,6 @@ export class FallbackProvider implements MealPlanProvider {
 
     const breakfasts = usable.filter((d) => d.type === 'breakfast');
     const mains = usable.filter((d) => d.type === 'lunch' || d.type === 'dinner');
-    const snacks = usable.filter((d) => d.type === 'snack');
 
     if (breakfasts.length === 0 || mains.length === 0) {
       throw new Error('Yeterli uygun tarif bulunamadı (diyet/alerji kısıtları çok dar)');
@@ -125,123 +98,75 @@ export class FallbackProvider implements MealPlanProvider {
 
     // Günler arası çeşitlilik için kullanım sayacı.
     const usage = new Map<string, number>();
-    const includeSnack = ctx.targetCalories >= 1500;
-
     const days = [];
     const shopping = new Set<string>();
 
     for (let i = 0; i < ctx.days; i++) {
-      const slots: Array<{ type: MealType; pool: Dish[] }> = [
-        { type: 'breakfast', pool: breakfasts },
-        { type: 'lunch', pool: mains },
-        { type: 'dinner', pool: mains },
+      const slots: Array<{ pool: Dish[] }> = [
+        { pool: breakfasts },
+        { pool: mains },
+        { pool: mains },
       ];
-      if (includeSnack && snacks.length > 0) slots.push({ type: 'snack', pool: snacks });
 
       const meals: Meal[] = [];
-      let dayCals = 0;
-      let dayProtein = 0;
-      const dinnerUsedToday = new Set<string>();
+      const usedToday = new Set<string>();
 
       for (const slot of slots) {
-        const slotBudget = ctx.targetCalories * MEAL_SPLIT[slot.type];
-        // Günün kalan protein açığı (0'ın altına düşmez) — protein öncelikli seçim.
-        const proteinDeficit = Math.max(0, ctx.macros.proteinG - dayProtein);
-
         const best = this.pickBest(slot.pool, {
-          slotBudget,
           pantry,
           disliked: ctx.dislikedFoods,
           usage,
-          proteinDeficit,
-          proteinTarget: ctx.macros.proteinG,
-          excludeIds: dinnerUsedToday, // aynı gün öğle=akşam olmasın
+          excludeIds: usedToday, // aynı gün aynı yemek tekrar etmesin
         });
         if (!best) continue;
 
-        dinnerUsedToday.add(best.dish.id);
-        usage.set(best.dish.id, (usage.get(best.dish.id) ?? 0) + 1);
+        usedToday.add(best.id);
+        usage.set(best.id, (usage.get(best.id) ?? 0) + 1);
 
-        const meal = scaledMeal(best.dish, best.scale);
-        meals.push(meal);
-        dayCals += meal.calories;
-        dayProtein += meal.protein_g;
-
-        for (const ing of best.dish.ingredients) {
+        meals.push(toMeal(best));
+        for (const ing of best.ingredients) {
           if (!pantry.has(norm(ing))) shopping.add(ing);
         }
       }
 
       days.push({
         day: i + 1,
-        label: ctx.period === 'weekly' ? DAY_LABELS[i % 7] : `Gün ${i + 1}`,
+        label: ctx.period === 'weekly' ? DAY_LABELS[i % 7] : ctx.days === 1 ? 'Bugün' : `Gün ${i + 1}`,
         meals,
-        total_calories: dayCals,
+        total_calories: 0,
       });
     }
 
-    const summary =
-      ctx.mode === 'diet'
-        ? `Hedefinize (${ctx.goal}) uygun, günlük ~${ctx.targetCalories} kcal ve ~${ctx.macros.proteinG} g protein hedefli ${ctx.days} günlük plan. Öğünler kalori bütçesine göre porsiyonlandı.`
-        : `Evdeki malzemeleri önceliklendiren, dengeli ve çeşitli ${ctx.days} günlük yemek planı.`;
-
     return {
-      summary,
-      target_calories: ctx.targetCalories,
+      summary: `Evindeki malzemelere göre ${ctx.days} günlük, çeşitli ev yemeği önerileri.`,
+      target_calories: 0,
       shopping_list: [...shopping].slice(0, 200),
       days,
     };
   }
 
+  /** Evdeki malzeme kapsamı + çeşitlilik − sevilmeyen cezasıyla en iyi yemeği seçer. */
   private pickBest(
     pool: Dish[],
-    opts: {
-      slotBudget: number;
-      pantry: Set<string>;
-      disliked: string[];
-      usage: Map<string, number>;
-      proteinDeficit: number;
-      proteinTarget: number;
-      excludeIds: Set<string>;
-    },
-  ): Candidate | null {
-    let best: Candidate | null = null;
+    opts: { pantry: Set<string>; disliked: string[]; usage: Map<string, number>; excludeIds: Set<string> },
+  ): Dish | null {
+    let best: Dish | null = null;
+    let bestScore = -Infinity;
 
     for (const dish of pool) {
       if (opts.excludeIds.has(dish.id)) continue;
 
-      const scale = roundScale(opts.slotBudget / dish.calories);
-      const scaledCals = dish.calories * scale;
-      const scaledProtein = dish.protein_g * scale;
-
-      // 1) Kalori uyumu: slota ne kadar yakın (0..1).
-      const calorieFit = 1 - Math.min(1, Math.abs(scaledCals - opts.slotBudget) / opts.slotBudget);
-
-      // 2) Evdeki malzeme kapsamı (0..1).
       const pantryCov = pantryCoverage(dish, opts.pantry);
-
-      // 3) Protein katkısı: günün açığını kapatmaya yarayan protein (0..1).
-      const proteinHelp =
-        opts.proteinTarget > 0
-          ? Math.min(1, scaledProtein / Math.max(1, opts.proteinDeficit || opts.proteinTarget * 0.33))
-          : 0;
-
-      // 4) Çeşitlilik cezası: daha önce kaç kez kullanıldı.
       const varietyPenalty = opts.usage.get(dish.id) ?? 0;
-
-      // 5) Sevilmeyen cezası.
       const dislikePenalty = dislikes(dish, opts.disliked) ? 1 : 0;
 
-      const score =
-        1.0 * calorieFit +
-        0.8 * pantryCov +
-        0.5 * proteinHelp -
-        0.6 * varietyPenalty -
-        2.0 * dislikePenalty;
+      const score = 1.0 * pantryCov - 0.6 * varietyPenalty - 2.0 * dislikePenalty;
 
-      if (!best || score > best.score) best = { dish, scale, score };
+      if (score > bestScore) {
+        bestScore = score;
+        best = dish;
+      }
     }
-
     return best;
   }
 }

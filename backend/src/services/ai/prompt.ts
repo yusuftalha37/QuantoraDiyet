@@ -5,17 +5,18 @@ import type { PlanContext } from './types.js';
  * schema, must respect allergies/diet, and must prefer pantry ingredients.
  * Keeping the contract explicit is what makes the output reliably parseable.
  */
-export const SYSTEM_PROMPT = `Sen QuantoraDiyet uygulamasının beslenme planlama motorusun.
-Türkçe, gerçekçi ve uygulanabilir yemek planları üretirsin.
+export const SYSTEM_PROMPT = `Sen "Bugün Ne Pişirsem?" uygulamasının ev yemeği öneri motorusun.
+Kullanıcının evindeki malzemelere göre, Türkçe ve uygulanabilir yemek önerileri üretirsin.
+Amacın "bugün ne pişireyim?" derdini çözmek; kalori/diyet değil, pratik ev yemeği.
 
 KATI KURALLAR:
 - Yanıtın SADECE geçerli JSON olacak. JSON dışında tek bir karakter bile yazma (açıklama, markdown, kod bloğu işareti yok).
-- Kullanıcının alerjisi olan hiçbir malzemeyi ASLA kullanma.
-- Kullanıcının diyet türüne (vegan, vejetaryen, keto, glutensiz, helal vb.) kesinlikle uy.
-- Mümkün oldukça kullanıcının evinde bulunan malzemeleri kullan; eksikleri shopping_list'e ekle.
-- Günlük toplam kaloriyi hedefe yakın tut (±%10).
-- Her öğün için gerçekçi makro (protein/karbonhidrat/yağ) ve kalori değerleri ver.
-- Tarifler kısa ve adım adım, Türkçe olsun.
+- Kullanıcının alerjisi olan / istemediği hiçbir malzemeyi ASLA kullanma.
+- Kullanıcının beslenme tercihine (vegan, vejetaryen, glutensiz, helal vb.) kesinlikle uy.
+- MÜMKÜN OLDUĞUNCA kullanıcının evinde bulunan malzemeleri kullan; eksik kalan malzemeleri shopping_list'e ekle.
+- Her gün için kahvaltı, öğle ve akşam önerisi ver; çeşitli olsun, günler birbirini tekrarlamasın.
+- Tarifler kısa, net ve adım adım, Türkçe olsun.
+- calories/protein_g/carbs_g/fat_g alanlarını kabaca doldurabilirsin (uygulama bunları göstermez); odak lezzet ve uygulanabilirlik.
 
 JSON ŞEMASI:
 {
@@ -42,34 +43,18 @@ JSON ŞEMASI:
 }`;
 
 export function buildUserPrompt(ctx: PlanContext): string {
-  const modeText =
-    ctx.mode === 'diet'
-      ? 'Hedef odaklı bir DİYET planı (kalori/makro hedeflerine sıkı uyum)'
-      : 'Günlük, pratik yemek planı (ev yemeği ağırlıklı)';
-
-  // Öğün başına kalori bütçesi (kahvaltı %25, öğle %35, akşam %30, ara %10).
-  const t = ctx.targetCalories;
-  const budget = {
-    breakfast: Math.round(t * 0.25),
-    lunch: Math.round(t * 0.35),
-    dinner: Math.round(t * 0.3),
-    snack: Math.round(t * 0.1),
-  };
+  const sureText =
+    ctx.period === 'daily' ? 'bugün için' : ctx.period === 'weekly' ? 'bu hafta için' : 'bu ay için';
 
   return [
-    `İstek türü: ${modeText}.`,
-    `Süre: ${ctx.days} gün (${ctx.period}).`,
-    `Günlük hedef kalori: ${t} kcal.`,
-    `Öğün başına yaklaşık kalori bütçesi: kahvaltı ${budget.breakfast}, öğle ${budget.lunch}, akşam ${budget.dinner}, ara öğün ${budget.snack} kcal. Her günün toplamı hedefin ±%10'u içinde olsun.`,
-    `Makro hedefleri (günlük): protein ${ctx.macros.proteinG} g, karbonhidrat ${ctx.macros.carbsG} g, yağ ${ctx.macros.fatG} g. Özellikle protein hedefini tutturmaya öncelik ver.`,
-    `Hedef: ${ctx.goal}. Diyet türü: ${ctx.dietType}.`,
-    `Alerjiler (asla kullanma): ${ctx.allergies.length ? ctx.allergies.join(', ') : 'yok'}.`,
+    `Kullanıcı ${sureText} ne pişireceğine dair öneri istiyor (${ctx.days} gün).`,
+    `Beslenme tercihi: ${ctx.dietType}.`,
+    `Alerjiler / istemedikleri (asla kullanma): ${ctx.allergies.length ? ctx.allergies.join(', ') : 'yok'}.`,
     `Sevilmeyen yiyecekler (mümkünse kaçın): ${ctx.dislikedFoods.length ? ctx.dislikedFoods.join(', ') : 'yok'}.`,
-    `Evdeki malzemeler (önce bunları kullan, eksikleri shopping_list'e yaz): ${ctx.pantry.length ? ctx.pantry.join(', ') : 'belirtilmedi'}.`,
-    'Çeşitlilik: Günler arasında aynı yemeği tekrarlama; porsiyonları kalori bütçesine göre ayarla (gerekirse "1,5 porsiyon" gibi belirt).',
-    'Uygulanabilirlik: Türk mutfağına uygun, kolay bulunur malzemelerle, kısa ve adım adım tarifler ver.',
+    `Evdeki malzemeler (ÖNCE bunları kullan, eksikleri shopping_list'e yaz): ${ctx.pantry.length ? ctx.pantry.join(', ') : 'belirtilmedi'}.`,
+    'Her gün için kahvaltı, öğle ve akşam yemeği öner; pratik, lezzetli ve çeşitli olsun, günler birbirini tekrarlamasın.',
     ctx.notes ? `Ek not: ${ctx.notes}` : '',
-    `Lütfen ${ctx.days} günlük planı yukarıdaki JSON şemasına birebir uygun üret. Sadece JSON döndür.`,
+    `Lütfen ${ctx.days} günlük öneriyi yukarıdaki JSON şemasına birebir uygun üret. Sadece JSON döndür.`,
   ]
     .filter(Boolean)
     .join('\n');

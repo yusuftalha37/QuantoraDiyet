@@ -15,15 +15,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _saving = false;
   String? _error;
 
-  // Vücut bilgileri
-  String _sex = 'female';
-  final _birthYear = TextEditingController(text: '1995');
-  final _height = TextEditingController(text: '170');
-  final _weight = TextEditingController(text: '70');
-
-  // Tercihler
-  String _activity = 'moderate';
-  String _goal = 'lose';
+  // Mutfak tercihleri
   String _diet = 'omnivore';
   final _allergy = TextEditingController();
   final List<String> _allergies = [];
@@ -34,9 +26,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
-    _birthYear.dispose();
-    _height.dispose();
-    _weight.dispose();
     _allergy.dispose();
     _pantryInput.dispose();
     super.dispose();
@@ -49,13 +38,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
     try {
       final state = context.read<AppState>();
+      // Diyet/kalori işi kaldırıldı; vücut alanları arka planda varsayılan.
       final profile = Profile(
-        sex: _sex,
-        birthYear: int.tryParse(_birthYear.text) ?? 1995,
-        heightCm: double.tryParse(_height.text) ?? 170,
-        weightKg: double.tryParse(_weight.text) ?? 70,
-        activityLevel: _activity,
-        goal: _goal,
+        sex: 'other',
+        birthYear: 1990,
+        heightCm: 170,
+        weightKg: 70,
+        activityLevel: 'moderate',
+        goal: 'maintain',
         dietType: _diet,
         allergies: _allergies,
         dislikedFoods: const [],
@@ -75,38 +65,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Hoş geldin! Seni tanıyalım')),
+      appBar: AppBar(title: const Text('Mutfağını tanıyalım')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            _sectionTitle(context, '1. Vücut bilgileri', Icons.person_outline),
-            _dropdown('Cinsiyet', _sex, const {
-              'female': 'Kadın', 'male': 'Erkek', 'other': 'Belirtmek istemiyorum',
-            }, (v) => setState(() => _sex = v)),
-            _numField('Doğum yılı', _birthYear),
-            _numField('Boy (cm)', _height),
-            _numField('Kilo (kg)', _weight),
-
-            const SizedBox(height: 24),
-            _sectionTitle(context, '2. Tercihler', Icons.tune),
-            _dropdown('Aktivite düzeyi', _activity, const {
-              'sedentary': 'Hareketsiz', 'light': 'Az hareketli', 'moderate': 'Orta',
-              'active': 'Aktif', 'very_active': 'Çok aktif',
-            }, (v) => setState(() => _activity = v)),
-            _dropdown('Hedef', _goal, const {
-              'lose': 'Kilo vermek', 'maintain': 'Korumak', 'gain': 'Kilo almak',
-            }, (v) => setState(() => _goal = v)),
-            _dropdown('Diyet türü', _diet, const {
-              'omnivore': 'Her şey', 'vegetarian': 'Vejetaryen', 'vegan': 'Vegan',
-              'pescatarian': 'Pesketaryen', 'keto': 'Keto', 'mediterranean': 'Akdeniz',
-              'halal': 'Helal', 'glutenfree': 'Glutensiz',
+            _sectionTitle(context, '1. Mutfak tercihin', Icons.restaurant),
+            _dropdown('Beslenme tercihi', _diet, const {
+              'omnivore': 'Fark etmez', 'vegetarian': 'Vejetaryen', 'vegan': 'Vegan',
+              'pescatarian': 'Pesketaryen', 'halal': 'Helal', 'glutenfree': 'Glutensiz',
             }, (v) => setState(() => _diet = v)),
             const SizedBox(height: 8),
-            _chipInput('Alerji ekle (örn. fındık)', _allergy, _allergies),
+            _chipInput('Yememek istediğin / alerjin (örn. fındık)', _allergy, _allergies),
 
             const SizedBox(height: 24),
-            _sectionTitle(context, '3. Evinde neler var?', Icons.kitchen),
+            _sectionTitle(context, '2. Evinde neler var?', Icons.kitchen),
             const Text(
               'Evdeki malzemeleri kategorilerden seç. Planların önce bunlarla '
               'hazırlanır; listede olmayanı aşağıdan elle ekleyebilirsin.',
@@ -182,15 +155,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
-
-  Widget _numField(String label, TextEditingController c) => Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: TextField(
-          controller: c,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: label),
-        ),
-      );
 
   Widget _dropdown(String label, String value, Map<String, String> options, ValueChanged<String> onChanged) =>
       Padding(

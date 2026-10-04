@@ -11,8 +11,8 @@ class PlanScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Plan'),
-          bottom: const TabBar(tabs: [Tab(text: 'Günler'), Tab(text: 'Alışveriş')]),
+          title: const Text('Yemek önerileri'),
+          bottom: const TabBar(tabs: [Tab(text: 'Yemekler'), Tab(text: 'Alışveriş')]),
         ),
         body: TabBarView(
           children: [_DaysTab(plan: plan), _ShoppingTab(items: plan.shoppingList)],
@@ -34,18 +34,7 @@ class _DaysTab extends StatelessWidget {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Chip(label: Text('${plan.targetCalories} kcal/gün'), visualDensity: VisualDensity.compact),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(plan.summary),
-              ],
-            ),
+            child: Text(plan.summary),
           ),
         ),
         const SizedBox(height: 8),
@@ -65,7 +54,7 @@ class _DayCard extends StatelessWidget {
       child: ExpansionTile(
         shape: const Border(),
         title: Text(day.label, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: Text('${day.totalCalories} kcal · ${day.meals.length} öğün'),
+        subtitle: Text('${day.meals.length} öğün'),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: day.meals.map((m) => _MealTile(meal: m)).toList(),
       ),
@@ -84,19 +73,8 @@ class _MealTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text('${meal.typeLabel}: ${meal.name}',
-                    style: Theme.of(context).textTheme.titleSmall),
-              ),
-              Text('${meal.calories} kcal'),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text('P ${meal.proteinG}g · K ${meal.carbsG}g · Y ${meal.fatG}g',
-              style: Theme.of(context).textTheme.bodySmall),
+          Text('${meal.typeLabel}: ${meal.name}',
+              style: Theme.of(context).textTheme.titleSmall),
           if (meal.ingredients.isNotEmpty) ...[
             const SizedBox(height: 6),
             Wrap(
