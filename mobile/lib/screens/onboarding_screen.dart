@@ -31,6 +31,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  /// "Evinde ne var?" bölümünü atla: ortalama ev + mevsim ürünlerini kullan.
+  Future<void> _skip() async {
+    setState(() {
+      _pantry
+        ..clear()
+        ..addAll(seasonalDefaultPantry());
+    });
+    await _finish();
+  }
+
   Future<void> _finish() async {
     setState(() {
       _saving = true;
@@ -81,10 +91,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: 24),
             _sectionTitle(context, '2. Evinde neler var?', Icons.kitchen),
             const Text(
-              'Evdeki malzemeleri kategorilerden seç. Planların önce bunlarla '
+              'Evdeki malzemeleri kategorilerden seç. Öneriler önce bunlarla '
               'hazırlanır; listede olmayanı aşağıdan elle ekleyebilirsin.',
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: _saving ? null : _skip,
+              icon: const Icon(Icons.fast_forward),
+              label: Text('Atla — ortalama ev + ${seasonLabel()} ürünleriyle başla'),
+            ),
+            const SizedBox(height: 10),
             Text('Seçili: ${_pantry.length} malzeme',
                 style: Theme.of(context).textTheme.labelMedium),
             const SizedBox(height: 8),

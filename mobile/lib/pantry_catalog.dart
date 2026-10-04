@@ -41,3 +41,43 @@ const List<PantryCategory> kPantryCatalog = [
     'zerdeçal', 'köri',
   ]),
 ];
+
+/// Hemen her evde bulunan temel malzemeler (mevsimden bağımsız).
+const List<String> _staples = [
+  'yumurta', 'süt', 'yoğurt', 'beyaz peynir', 'un', 'pirinç', 'bulgur',
+  'makarna', 'kırmızı mercimek', 'nohut', 'soğan', 'sarımsak', 'patates',
+  'salça', 'zeytinyağı', 'tuz', 'karabiber', 'tavuk göğsü', 'dana kıyma',
+];
+
+/// İçinde bulunulan aya göre mevsim etiketi.
+String seasonLabel([DateTime? now]) {
+  final m = (now ?? DateTime.now()).month;
+  if (m == 12 || m <= 2) return 'kış';
+  if (m <= 5) return 'ilkbahar';
+  if (m <= 8) return 'yaz';
+  return 'sonbahar';
+}
+
+/// Mevsime göre taze ürünler.
+List<String> _seasonalProduce([DateTime? now]) {
+  switch (seasonLabel(now)) {
+    case 'kış':
+      return ['lahana', 'karnabahar', 'brokoli', 'ıspanak', 'pırasa', 'havuç',
+        'portakal', 'mandalina', 'elma', 'limon'];
+    case 'ilkbahar':
+      return ['ıspanak', 'marul', 'bezelye', 'taze soğan', 'maydanoz',
+        'çilek', 'kabak', 'havuç'];
+    case 'yaz':
+      return ['domates', 'salatalık', 'yeşil biber', 'patlıcan', 'kabak',
+        'taze fasulye', 'biber', 'limon'];
+    default: // sonbahar
+      return ['patlıcan', 'yeşil biber', 'domates', 'elma', 'üzüm', 'lahana',
+        'karnabahar', 'ıspanak', 'havuç'];
+  }
+}
+
+/// "Atla" seçilince kullanılan: ortalama ev malzemeleri + mevsim ürünleri.
+List<String> seasonalDefaultPantry([DateTime? now]) {
+  final set = <String>{..._staples, ..._seasonalProduce(now)};
+  return set.toList();
+}
