@@ -75,68 +75,81 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mutfağını tanıyalım')),
+      appBar: AppBar(title: const Text('Hoş geldin')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
-            _sectionTitle(context, '1. Mutfak tercihin', Icons.restaurant),
-            _dropdown('Beslenme tercihi', _diet, const {
-              'omnivore': 'Fark etmez', 'vegetarian': 'Vejetaryen', 'vegan': 'Vegan',
-              'pescatarian': 'Pesketaryen', 'halal': 'Helal', 'glutenfree': 'Glutensiz',
-            }, (v) => setState(() => _diet = v)),
-            const SizedBox(height: 8),
-            _chipInput('Yememek istediğin / alerjin (örn. fındık)', _allergy, _allergies),
+            const Center(child: Text('👋', style: TextStyle(fontSize: 64))),
+            const SizedBox(height: 12),
+            Text('Sana yemek önerelim!',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Text(
+              'Hiçbir şey doldurmana gerek yok. Sadece başla; evinde genelde '
+              'bulunan malzemelere ve mevsime göre öneri veririz.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 28),
 
-            const SizedBox(height: 24),
-            _sectionTitle(context, '2. Evinde neler var?', Icons.kitchen),
-            const Text(
-              'Evdeki malzemeleri kategorilerden seç. Öneriler önce bunlarla '
-              'hazırlanır; listede olmayanı aşağıdan elle ekleyebilirsin.',
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
+            // ANA YOL: tek dokunuş.
+            FilledButton(
               onPressed: _saving ? null : _skip,
-              icon: const Icon(Icons.fast_forward),
-              label: Text('Atla — ortalama ev + ${seasonLabel()} ürünleriyle başla'),
+              child: _saving
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('🍳  HADİ BAŞLA'),
             ),
-            const SizedBox(height: 10),
-            Text('Seçili: ${_pantry.length} malzeme',
-                style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 8),
-            ...kPantryCatalog.map(_categorySection),
-            const SizedBox(height: 8),
-            _chipInput('Listede yok mu? Elle ekle', _pantryInput, _pantry),
+            const SizedBox(height: 20),
+
+            // İSTEĞE BAĞLI: kendin ayarla.
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: ExpansionTile(
+                shape: const Border(),
+                leading: const Text('⚙️', style: TextStyle(fontSize: 26)),
+                title: const Text('İstersen kendin seç',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('(isteğe bağlı)'),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                children: [
+                  _dropdown('Beslenme tercihi', _diet, const {
+                    'omnivore': 'Fark etmez', 'vegetarian': 'Vejetaryen', 'vegan': 'Vegan',
+                    'pescatarian': 'Pesketaryen', 'halal': 'Helal', 'glutenfree': 'Glutensiz',
+                  }, (v) => setState(() => _diet = v)),
+                  const SizedBox(height: 8),
+                  _chipInput('Yemediğin / alerjin (örn. fındık)', _allergy, _allergies),
+                  const SizedBox(height: 16),
+                  Text('Evinde neler var?',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text('Seçili: ${_pantry.length} malzeme',
+                      style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  ...kPantryCatalog.map(_categorySection),
+                  const SizedBox(height: 8),
+                  _chipInput('Listede yok mu? Elle ekle', _pantryInput, _pantry),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: _saving ? null : _finish,
+                    child: const Text('Kaydet ve başla'),
+                  ),
+                ],
+              ),
+            ),
 
             if (_error != null) ...[
               const SizedBox(height: 16),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
-
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _saving ? null : _finish,
-              icon: _saving
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.check),
-              label: Text(_saving ? 'Kaydediliyor...' : 'Kaydet ve başla'),
-            ),
           ],
         ),
       ),
     );
   }
-
-  Widget _sectionTitle(BuildContext context, String text, IconData icon) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(text, style: Theme.of(context).textTheme.titleMedium),
-          ],
-        ),
-      );
 
   Widget _categorySection(PantryCategory cat) {
     final selectedInCat = cat.items.where(_pantry.contains).length;

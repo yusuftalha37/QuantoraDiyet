@@ -112,72 +112,46 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _suggest,
-        icon: const Icon(Icons.restaurant_menu),
-        label: const Text('Yemek öner'),
-      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           children: [
             if (_loading) const LinearProgressIndicator(),
-            if (state.demo)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Demo modu: öneriler örnektir, backend’e bağlanılmaz.',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            _HeroCard(onTap: _suggest),
-            const SizedBox(height: 20),
-            Text('Önceki önerilerim', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
+            // DEV buton: ekranın ana aksiyonu. Tek dokunuş.
+            _BigSuggestButton(onTap: _suggest),
+            const SizedBox(height: 28),
+            Text('Daha önce önerdiklerim',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
             if (_history.isEmpty && !_loading)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Column(
                     children: [
-                      const Text('🥘', style: TextStyle(fontSize: 48)),
+                      const Text('🥘', style: TextStyle(fontSize: 56)),
                       const SizedBox(height: 12),
                       Text('Henüz öneri yok',
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text('"Yemek öner"e dokun, mutfağa koyulalım!',
-                          style: Theme.of(context).textTheme.bodySmall),
+                      Text('Yukarıdaki büyük yeşil düğmeye bas.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   ),
                 ),
               ),
             ..._history.map((p) => Card(
                   clipBehavior: Clip.antiAlias,
+                  margin: const EdgeInsets.only(bottom: 10),
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      child: const Text('🍽️', style: TextStyle(fontSize: 20)),
-                    ),
-                    title: Text('${_periodLabel(p['period']?.toString())} önerileri'),
-                    subtitle: Text(p['summary']?.toString() ?? '',
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                    trailing: const Icon(Icons.chevron_right),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    leading: const Text('🍽️', style: TextStyle(fontSize: 32)),
+                    title: Text('${_periodLabel(p['period']?.toString())} önerileri',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: const Icon(Icons.chevron_right, size: 28),
                     onTap: () => _openPlan(p['id'].toString()),
                   ),
                 )),
@@ -195,9 +169,10 @@ class _HomeScreenState extends State<HomeScreen> {
       };
 }
 
-class _HeroCard extends StatelessWidget {
+/// Ekranın ana aksiyonu: büyük, bariz, tek dokunuşluk yeşil düğme.
+class _BigSuggestButton extends StatelessWidget {
   final VoidCallback onTap;
-  const _HeroCard({required this.onTap});
+  const _BigSuggestButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -206,47 +181,35 @@ class _HeroCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [scheme.primary, scheme.tertiary],
-            ),
+            borderRadius: BorderRadius.circular(24),
+            color: scheme.primary,
             boxShadow: [
               BoxShadow(
-                color: scheme.primary.withOpacity(0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: scheme.primary.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
+            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+            child: Column(
               children: [
-                const Text('🍳', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Bugün ne pişireyim?',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: scheme.onPrimary,
-                                fontWeight: FontWeight.bold,
-                              )),
-                      const SizedBox(height: 4),
-                      Text('Evindeki malzemelere göre öneri al',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: scheme.onPrimary.withOpacity(0.9),
-                              )),
-                    ],
-                  ),
-                ),
-                Icon(Icons.arrow_forward_rounded, color: scheme.onPrimary),
+                const Text('🍳', style: TextStyle(fontSize: 72)),
+                const SizedBox(height: 16),
+                Text('BUGÜN NE PİŞİREYİM?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: scheme.onPrimary,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    )),
+                const SizedBox(height: 8),
+                Text('Dokun, sana yemek önereyim',
+                    style: TextStyle(color: scheme.onPrimary.withOpacity(0.9), fontSize: 16)),
               ],
             ),
           ),
@@ -256,41 +219,56 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-class _PeriodSheet extends StatefulWidget {
+/// Süre seçimi: üç büyük, tam genişlik düğme.
+class _PeriodSheet extends StatelessWidget {
   const _PeriodSheet();
-  @override
-  State<_PeriodSheet> createState() => _PeriodSheetState();
-}
-
-class _PeriodSheetState extends State<_PeriodSheet> {
-  String _period = 'daily';
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ne kadarlık öneri?', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'daily', label: Text('Bugün')),
-              ButtonSegment(value: 'weekly', label: Text('Bu hafta')),
-              ButtonSegment(value: 'monthly', label: Text('Bu ay')),
-            ],
-            selected: {_period},
-            onSelectionChanged: (s) => setState(() => _period = s.first),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => Navigator.of(context).pop(_period),
-            icon: const Icon(Icons.restaurant_menu),
-            label: const Text('Öner'),
-          ),
+          Text('Ne kadarlık öneri istersin?',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          _bigOption(context, '🍽️', 'Bugün için', 'daily'),
+          const SizedBox(height: 14),
+          _bigOption(context, '📅', 'Bu hafta için', 'weekly'),
+          const SizedBox(height: 14),
+          _bigOption(context, '🗓️', 'Bu ay için', 'monthly'),
         ],
+      ),
+    );
+  }
+
+  Widget _bigOption(BuildContext context, String emoji, String label, String value) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () => Navigator.of(context).pop(value),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            child: Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 32)),
+                const SizedBox(width: 16),
+                Text(label,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onPrimaryContainer,
+                    )),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
