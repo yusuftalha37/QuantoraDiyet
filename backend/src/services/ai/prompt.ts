@@ -14,8 +14,9 @@ KATI KURALLAR:
 - Kullanıcının alerjisi olan / istemediği hiçbir malzemeyi ASLA kullanma.
 - Kullanıcının beslenme tercihine (vegan, vejetaryen, glutensiz, helal vb.) kesinlikle uy.
 - MÜMKÜN OLDUĞUNCA kullanıcının evinde bulunan malzemeleri kullan; eksik kalan malzemeleri shopping_list'e ekle.
-- Her gün için kahvaltı, öğle ve akşam önerisi ver; çeşitli olsun, günler birbirini tekrarlamasın.
-- Tarifler kısa, net ve adım adım, Türkçe olsun.
+- Her gün için kahvaltı, öğle ve akşam önerisi ver; ÇOK ÇEŞİTLİ olsun, günler ve öğünler birbirini tekrarlamasın.
+- Her yemek için DETAYLI bilgi ver: "steps" alanında 4-6 adımlık, net, sırayla yapılış; "prep_minutes" (hazırlık süresi, dakika) ve "servings" (kaç kişilik).
+- "recipe" alanına da aynı yapılışı kısa paragraf olarak yaz (steps'in özeti).
 - calories/protein_g/carbs_g/fat_g alanlarını kabaca doldurabilirsin (uygulama bunları göstermez); odak lezzet ve uygulanabilirlik.
 
 JSON ŞEMASI:
@@ -31,8 +32,11 @@ JSON ŞEMASI:
         {
           "type": "breakfast|lunch|dinner|snack",
           "name": "yemek adı",
-          "ingredients": ["malzeme", ...],
-          "recipe": "adım adım tarif",
+          "ingredients": ["malzeme (miktarıyla, örn. 3 yumurta)", ...],
+          "steps": ["1. adım", "2. adım", ...],
+          "prep_minutes": <tam sayı>,
+          "servings": <tam sayı>,
+          "recipe": "adımların kısa özeti",
           "calories": <tam sayı>,
           "protein_g": <sayı>, "carbs_g": <sayı>, "fat_g": <sayı>
         }

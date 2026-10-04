@@ -9,11 +9,14 @@ export const mealSchema = z.object({
   type: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
   name: z.string().min(1).max(120),
   ingredients: z.array(z.string().min(1).max(120)).max(30),
-  recipe: z.string().min(1).max(1500),
-  calories: z.number().int().min(0).max(4000),
-  protein_g: z.number().min(0).max(400),
-  carbs_g: z.number().min(0).max(600),
-  fat_g: z.number().min(0).max(400),
+  recipe: z.string().min(1).max(2000),
+  steps: z.array(z.string().min(1).max(400)).max(20).optional(),
+  prep_minutes: z.number().int().min(0).max(600).optional(),
+  servings: z.number().int().min(1).max(20).optional(),
+  calories: z.number().int().min(0).max(4000).default(0),
+  protein_g: z.number().min(0).max(400).default(0),
+  carbs_g: z.number().min(0).max(600).default(0),
+  fat_g: z.number().min(0).max(400).default(0),
 });
 
 export const dayPlanSchema = z.object({

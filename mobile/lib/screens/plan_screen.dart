@@ -108,19 +108,84 @@ class _MealTile extends StatelessWidget {
               ),
             ],
           ),
-          if (meal.ingredients.isNotEmpty) ...[
+          if (meal.prepMinutes != null || meal.servings != null) ...[
             const SizedBox(height: 6),
+            Row(
+              children: [
+                if (meal.prepMinutes != null) ...[
+                  const Text('⏱️ ', style: TextStyle(fontSize: 14)),
+                  Text('${meal.prepMinutes} dk',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+                if (meal.prepMinutes != null && meal.servings != null)
+                  const Text('   ·   ', style: TextStyle(fontSize: 14)),
+                if (meal.servings != null) ...[
+                  const Text('👥 ', style: TextStyle(fontSize: 14)),
+                  Text('${meal.servings} kişilik',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ],
+            ),
+          ],
+          if (meal.ingredients.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Malzemeler',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
             Wrap(
               spacing: 6,
-              runSpacing: -6,
+              runSpacing: 2,
               children: meal.ingredients
-                  .map((i) => Chip(label: Text(i), visualDensity: VisualDensity.compact))
+                  .map((i) => Chip(
+                        label: Text(i),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ))
                   .toList(),
             ),
           ],
-          const SizedBox(height: 6),
-          Text(meal.recipe, style: Theme.of(context).textTheme.bodyMedium),
-          const Divider(height: 20),
+          const SizedBox(height: 10),
+          Text('Yapılışı',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          if (meal.steps.isNotEmpty)
+            ...List.generate(meal.steps.length, (i) => _StepRow(index: i + 1, text: meal.steps[i]))
+          else
+            Text(meal.recipe, style: Theme.of(context).textTheme.bodyMedium),
+          const Divider(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepRow extends StatelessWidget {
+  final int index;
+  final String text;
+  const _StepRow({required this.index, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: scheme.primaryContainer, shape: BoxShape.circle),
+            child: Text('$index',
+                style: TextStyle(
+                  color: scheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                )),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
         ],
       ),
     );

@@ -3,6 +3,9 @@ class Meal {
   final String name;
   final List<String> ingredients;
   final String recipe;
+  final List<String> steps;
+  final int? prepMinutes;
+  final int? servings;
   final int calories;
   final num proteinG;
   final num carbsG;
@@ -13,22 +16,32 @@ class Meal {
     required this.name,
     required this.ingredients,
     required this.recipe,
-    required this.calories,
-    required this.proteinG,
-    required this.carbsG,
-    required this.fatG,
+    this.steps = const [],
+    this.prepMinutes,
+    this.servings,
+    this.calories = 0,
+    this.proteinG = 0,
+    this.carbsG = 0,
+    this.fatG = 0,
   });
 
-  factory Meal.fromJson(Map<String, dynamic> j) => Meal(
-        type: j['type'] as String? ?? 'meal',
-        name: j['name'] as String? ?? '',
-        ingredients: (j['ingredients'] as List? ?? []).map((e) => e.toString()).toList(),
-        recipe: j['recipe'] as String? ?? '',
-        calories: (j['calories'] as num? ?? 0).toInt(),
-        proteinG: j['protein_g'] as num? ?? 0,
-        carbsG: j['carbs_g'] as num? ?? 0,
-        fatG: j['fat_g'] as num? ?? 0,
-      );
+  factory Meal.fromJson(Map<String, dynamic> j) {
+    final steps = (j['steps'] as List? ?? []).map((e) => e.toString()).toList();
+    final recipe = (j['recipe'] as String?) ?? (steps.isNotEmpty ? steps.join('\n') : '');
+    return Meal(
+      type: j['type'] as String? ?? 'meal',
+      name: j['name'] as String? ?? '',
+      ingredients: (j['ingredients'] as List? ?? []).map((e) => e.toString()).toList(),
+      recipe: recipe,
+      steps: steps,
+      prepMinutes: (j['prep_minutes'] as num?)?.toInt(),
+      servings: (j['servings'] as num?)?.toInt(),
+      calories: (j['calories'] as num? ?? 0).toInt(),
+      proteinG: j['protein_g'] as num? ?? 0,
+      carbsG: j['carbs_g'] as num? ?? 0,
+      fatG: j['fat_g'] as num? ?? 0,
+    );
+  }
 
   String get typeLabel => switch (type) {
         'breakfast' => 'Kahvaltı',
