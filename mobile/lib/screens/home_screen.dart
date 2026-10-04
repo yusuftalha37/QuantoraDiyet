@@ -185,7 +185,11 @@ class _BigSuggestButton extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            color: scheme.primary,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [scheme.primary, const Color(0xFF0E6B3A)],
+            ),
             boxShadow: [
               BoxShadow(
                 color: scheme.primary.withOpacity(0.35),

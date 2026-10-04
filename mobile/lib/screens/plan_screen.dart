@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/meal_plan.dart';
 
 class PlanScreen extends StatelessWidget {
@@ -74,12 +75,12 @@ class _ShoppingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FilledButton.tonalIcon(
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(58)),
+      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(60)),
       onPressed: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => _ShoppingScreen(items: items)),
       ),
-      icon: const Text('🛒', style: TextStyle(fontSize: 24)),
-      label: const Text('Eksik Malzemeler (Alışveriş Listesi)'),
+      icon: const Text('🛒', style: TextStyle(fontSize: 26)),
+      label: const Text('Alışveriş Listem'),
     );
   }
 }
@@ -92,11 +93,12 @@ String _mealEmoji(String type) => switch (type) {
       _ => '🥄',
     };
 
+// Birbiriyle uyumlu, sıcak-soğuk dengeli palet.
 Color _mealColor(String type, ColorScheme s) => switch (type) {
-      'breakfast' => const Color(0xFFFFB300),
-      'lunch' => const Color(0xFF2E7D32),
-      'dinner' => const Color(0xFFE64A19),
-      'snack' => const Color(0xFF00897B),
+      'breakfast' => const Color(0xFFE8A317), // bal sarısı
+      'lunch' => const Color(0xFF2F9E5B), // taze yeşil
+      'dinner' => const Color(0xFFD86A3C), // terakota
+      'snack' => const Color(0xFF2B9E8D), // deniz yeşili
       _ => s.primary,
     };
 
@@ -299,61 +301,125 @@ class _ShoppingScreen extends StatefulWidget {
 class _ShoppingScreenState extends State<_ShoppingScreen> {
   final Set<int> _checked = {};
 
+  void _share() {
+    final buffer = StringBuffer('🛒 Alışveriş Listem\n\n');
+    for (final item in widget.items) {
+      buffer.writeln('• $item');
+    }
+    buffer.writeln('\n(Bugün Ne Pişirsem? uygulaması)');
+    Share.share(buffer.toString(), subject: 'Alışveriş Listem');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Alışveriş Listesi')),
-      body: widget.items.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('✅', style: TextStyle(fontSize: 56)),
-                    SizedBox(height: 12),
-                    Text('Her şey evde var gibi!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18)),
-                  ],
-                ),
-              ),
-            )
-          : Column(
+    final scheme = Theme.of(context).colorScheme;
+
+    if (widget.items.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Alışveriş Listesi')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: double.infinity,
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  padding: const EdgeInsets.all(14),
-                  child: const Text(
-                    '🛒 Markete gidince bunları al. Aldıklarının üstüne dokun, çizilsin.',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: widget.items.length,
-                    itemBuilder: (_, i) {
-                      final checked = _checked.contains(i);
-                      return CheckboxListTile(
-                        value: checked,
-                        onChanged: (v) =>
-                            setState(() => v == true ? _checked.add(i) : _checked.remove(i)),
-                        title: Text(
-                          widget.items[i],
-                          style: TextStyle(
-                            fontSize: 18,
-                            decoration: checked ? TextDecoration.lineThrough : null,
-                            color: checked ? Theme.of(context).disabledColor : null,
-                          ),
-                        ),
-                        controlAffinity: ListTileControlAffinity.leading,
-                      );
-                    },
-                  ),
-                ),
+                Text('✅', style: TextStyle(fontSize: 64)),
+                SizedBox(height: 14),
+                Text('Markete gitmene gerek yok!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                SizedBox(height: 6),
+                Text('Bu yemekler için gereken her şey evinde var.',
+                    textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
               ],
             ),
+          ),
+        ),
+      );
+    }
+
+    final total = widget.items.length;
+    final done = _checked.length;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Alışveriş Listesi')),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: FilledButton.icon(
+            onPressed: _share,
+            icon: const Text('📲', style: TextStyle(fontSize: 24)),
+            label: const Text('Listeyi Paylaş (WhatsApp vb.)'),
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Açıklama + ilerleme
+          Container(
+            width: double.infinity,
+            color: scheme.primaryContainer,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('🛒 Markete gidince bunları al',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onPrimaryContainer,
+                    )),
+                const SizedBox(height: 4),
+                Text('Aldığın şeyin üstüne dokun; çizilsin.',
+                    style: TextStyle(fontSize: 15, color: scheme.onPrimaryContainer)),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: total == 0 ? 0 : done / total,
+                    minHeight: 10,
+                    backgroundColor: scheme.surface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text('$done / $total alındı',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onPrimaryContainer,
+                    )),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              itemCount: widget.items.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (_, i) {
+                final checked = _checked.contains(i);
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  onTap: () =>
+                      setState(() => checked ? _checked.remove(i) : _checked.add(i)),
+                  leading: Icon(
+                    checked ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: checked ? scheme.primary : scheme.outline,
+                    size: 30,
+                  ),
+                  title: Text(
+                    widget.items[i],
+                    style: TextStyle(
+                      fontSize: 18,
+                      decoration: checked ? TextDecoration.lineThrough : null,
+                      color: checked ? Theme.of(context).disabledColor : null,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
