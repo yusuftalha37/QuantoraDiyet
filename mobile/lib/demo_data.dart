@@ -63,17 +63,43 @@ class DemoData {
 
   static const _labels = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
+  static const int _target = 1800;
+  // Öğün başına kalori payı (backend ile aynı mantık).
+  static const Map<String, double> _split = {
+    'breakfast': 0.25, 'lunch': 0.35, 'dinner': 0.30, 'snack': 0.10,
+  };
+
+  /// Bir tarifi slot bütçesine göre porsiyonlar (0.5–2x, 0.25 adım).
+  static Meal _scaled(Map<String, dynamic> base, double budget) {
+    final cals = (base['calories'] as num).toDouble();
+    var scale = budget / cals;
+    scale = (scale.clamp(0.5, 2.0) * 4).round() / 4;
+    final name = scale == 1.0 ? base['name'] : '${base['name']} (~$scale porsiyon)';
+    return Meal(
+      type: base['type'] as String,
+      name: name as String,
+      ingredients: (base['ingredients'] as List).map((e) => e.toString()).toList(),
+      recipe: base['recipe'] as String,
+      calories: (cals * scale).round(),
+      proteinG: ((base['protein_g'] as num) * scale).round(),
+      carbsG: ((base['carbs_g'] as num) * scale).round(),
+      fatG: ((base['fat_g'] as num) * scale).round(),
+    );
+  }
+
   /// Seçilen tür/süreye göre örnek bir plan üretir (tamamen yerel, ağsız).
+  /// Backend motorunu taklit eder: öğün bütçesi, porsiyon ölçekleme, çeşitlilik.
   static MealPlan buildPlan(String mode, String period) {
     final count = period == 'daily' ? 1 : (period == 'weekly' ? 7 : 30);
     final days = <DayPlan>[];
     final shopping = <String>{};
 
     for (var i = 0; i < count; i++) {
-      final breakfast = Meal.fromJson(_breakfasts[i % _breakfasts.length]);
-      final lunch = Meal.fromJson(_mains[i % _mains.length]);
-      final dinner = Meal.fromJson(_mains[(i + 1) % _mains.length]);
-      final snack = Meal.fromJson(_snacks[i % _snacks.length]);
+      final breakfast = _scaled(_breakfasts[i % _breakfasts.length], _target * _split['breakfast']!);
+      final lunch = _scaled(_mains[i % _mains.length], _target * _split['lunch']!);
+      // Akşam öğününü öğleden farklı seç (çeşitlilik).
+      final dinner = _scaled(_mains[(i + 1) % _mains.length], _target * _split['dinner']!);
+      final snack = _scaled(_snacks[i % _snacks.length], _target * _split['snack']!);
       final meals = [breakfast, lunch, dinner, snack];
       final total = meals.fold<int>(0, (a, m) => a + m.calories);
 

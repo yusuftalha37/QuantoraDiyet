@@ -136,4 +136,73 @@ export const DISHES: Dish[] = [
     calories: 200, protein_g: 7, carbs_g: 20, fat_g: 11,
     suitableFor: ['vegan', 'vegetarian', 'mediterranean', 'halal', 'glutenfree'], allergens: ['sesame'],
   },
+
+  // ---- Ek kahvaltılar ----
+  {
+    id: 'b_omlet', type: 'breakfast', name: 'Peynirli omlet',
+    ingredients: ['yumurta', 'kaşar peyniri', 'tereyağı', 'maydanoz'],
+    recipe: 'Yumurtaları çırp, tereyağında pişir, rendelenmiş kaşarı ekleyip katla.',
+    calories: 340, protein_g: 24, carbs_g: 4, fat_g: 26,
+    suitableFor: ['vegetarian', 'halal', 'glutenfree', 'keto'], allergens: ['egg', 'dairy'],
+  },
+  {
+    id: 'b_yogurt_granola', type: 'breakfast', name: 'Yoğurt, yulaf ve meyve kâsesi',
+    ingredients: ['yoğurt', 'yulaf', 'elma', 'ceviz', 'bal'],
+    recipe: 'Yoğurdun üzerine yulaf, doğranmış elma, ceviz ve bal ekle.',
+    calories: 380, protein_g: 18, carbs_g: 48, fat_g: 14,
+    suitableFor: ['vegetarian', 'mediterranean', 'halal'], allergens: ['dairy', 'gluten', 'nuts'],
+  },
+
+  // ---- Ek ana yemekler ----
+  {
+    id: 'm_tavuklu_salata', type: 'lunch', name: 'Izgara tavuklu yeşil salata',
+    ingredients: ['tavuk göğsü', 'marul', 'domates', 'salatalık', 'zeytinyağı', 'limon'],
+    recipe: 'Tavuğu ızgara yapıp dilimle; sebzelerle karıştır, zeytinyağı-limon gez.',
+    calories: 380, protein_g: 42, carbs_g: 12, fat_g: 18,
+    suitableFor: ['mediterranean', 'halal', 'glutenfree', 'keto'], allergens: [],
+  },
+  {
+    id: 'm_mercimek_corba', type: 'lunch', name: 'Mercimek çorbası ve tam buğday ekmeği',
+    ingredients: ['kırmızı mercimek', 'soğan', 'havuç', 'patates', 'tam buğday ekmeği'],
+    recipe: 'Sebzeleri ve mercimeği haşlayıp blenderdan geçir; ekmekle servis et.',
+    calories: 360, protein_g: 16, carbs_g: 58, fat_g: 7,
+    suitableFor: ['vegan', 'vegetarian', 'mediterranean', 'halal'], allergens: ['gluten'],
+  },
+  {
+    id: 'm_firin_tavuk_patates', type: 'dinner', name: 'Fırında tavuk ve sebze',
+    ingredients: ['tavuk but', 'patates', 'havuç', 'soğan', 'zeytinyağı'],
+    recipe: 'Tavuk ve sebzeleri baharatlayıp fırında birlikte pişir.',
+    calories: 560, protein_g: 38, carbs_g: 40, fat_g: 26,
+    suitableFor: ['halal', 'glutenfree'], allergens: [],
+  },
+  {
+    id: 'm_etli_turlu', type: 'dinner', name: 'Etli sebze türlü',
+    ingredients: ['dana eti', 'patlıcan', 'kabak', 'biber', 'domates', 'soğan'],
+    recipe: 'Eti kavur, doğranmış sebzeleri ve domatesi ekle, kısık ateşte pişir.',
+    calories: 520, protein_g: 34, carbs_g: 26, fat_g: 30,
+    suitableFor: ['halal', 'glutenfree'], allergens: [],
+  },
+  {
+    id: 'm_sebzeli_omlet', type: 'dinner', name: 'Sebzeli omlet',
+    ingredients: ['yumurta', 'ıspanak', 'biber', 'domates', 'zeytinyağı'],
+    recipe: 'Sebzeleri sote et, çırpılmış yumurtayı döküp omlet yap.',
+    calories: 300, protein_g: 20, carbs_g: 10, fat_g: 20,
+    suitableFor: ['vegetarian', 'mediterranean', 'halal', 'glutenfree', 'keto'], allergens: ['egg'],
+  },
+
+  // ---- Ek ara öğünler ----
+  {
+    id: 's_peynir_tahil', type: 'snack', name: 'Lor peyniri ve tam tahıllı galeta',
+    ingredients: ['lor peyniri', 'tam buğday galeta', 'domates'],
+    recipe: 'Galetanın üzerine lor ve domates dilimi koy.',
+    calories: 180, protein_g: 14, carbs_g: 16, fat_g: 6,
+    suitableFor: ['vegetarian', 'mediterranean', 'halal'], allergens: ['dairy', 'gluten'],
+  },
+  {
+    id: 's_smoothie', type: 'snack', name: 'Muzlu süt smoothie',
+    ingredients: ['süt', 'muz', 'yulaf', 'tarçın'],
+    recipe: 'Hepsini blenderda çek.',
+    calories: 240, protein_g: 12, carbs_g: 38, fat_g: 5,
+    suitableFor: ['vegetarian', 'mediterranean', 'halal'], allergens: ['dairy', 'gluten'],
+  },
 ];
