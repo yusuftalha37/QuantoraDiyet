@@ -6,8 +6,11 @@ import 'state/app_state.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/reminder_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  ReminderService.init(); // hatırlatma varsa yeniden planla (hatalıysa sessiz geçer)
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState()..bootstrap(),

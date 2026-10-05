@@ -28,4 +28,23 @@ class SecureStore {
     await _storage.delete(key: _kAccess);
     await _storage.delete(key: _kRefresh);
   }
+
+  // ---- Günlük hatırlatma ayarı ----
+  static const _kRemOn = 'reminder_on';
+  static const _kRemH = 'reminder_hour';
+  static const _kRemM = 'reminder_min';
+
+  Future<bool> reminderEnabled() async => (await _storage.read(key: _kRemOn)) == '1';
+
+  Future<(int, int)> reminderTime() async {
+    final h = int.tryParse(await _storage.read(key: _kRemH) ?? '') ?? 18;
+    final m = int.tryParse(await _storage.read(key: _kRemM) ?? '') ?? 0;
+    return (h, m);
+  }
+
+  Future<void> setReminder(bool on, int? hour, int? minute) async {
+    await _storage.write(key: _kRemOn, value: on ? '1' : '0');
+    if (hour != null) await _storage.write(key: _kRemH, value: '$hour');
+    if (minute != null) await _storage.write(key: _kRemM, value: '$minute');
+  }
 }

@@ -1,33 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/meal_plan.dart';
+import '../recipes.dart';
+import '../utils/scale.dart';
+import '../services/tts_service.dart';
+import 'cooking_mode_screen.dart';
 
-class PlanScreen extends StatelessWidget {
+class PlanScreen extends StatefulWidget {
   final MealPlan plan;
   const PlanScreen({super.key, required this.plan});
 
   @override
+  State<PlanScreen> createState() => _PlanScreenState();
+}
+
+class _PlanScreenState extends State<PlanScreen> {
+  late List<List<Meal>> _meals; // gün -> öğünler (değiştirilebilir)
+  late List<String> _labels;
+  late List<int> _dayNos;
+  int _servings = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    _labels = widget.plan.days.map((d) => d.label).toList();
+    _dayNos = widget.plan.days.map((d) => d.day).toList();
+    _meals = widget.plan.days.map((d) => List<Meal>.of(d.meals)).toList();
+    final s = widget.plan.days.first.meals
+        .firstWhere((m) => m.servings != null, orElse: () => widget.plan.days.first.meals.first)
+        .servings;
+    _servings = s ?? 4;
+  }
+
+  List<Map<String, dynamic>> _poolFor(String type) => switch (type) {
+        'breakfast' => RecipeCatalog.breakfasts,
+        'snack' => RecipeCatalog.extras,
+        _ => RecipeCatalog.mains,
+      };
+
+  void _swap(int day, int mealIdx) {
+    final meal = _meals[day][mealIdx];
+    final pool = _poolFor(meal.type);
+    if (pool.isEmpty) return;
+    final used = _meals[day].map((m) => m.name).toSet();
+    final start = pool.indexWhere((e) => e['name'] == meal.name);
+    for (var step = 1; step <= pool.length; step++) {
+      final cand = pool[(start + step) % pool.length];
+      if (cand['name'] == meal.name || used.contains(cand['name'])) continue;
+      setState(() => _meals[day][mealIdx] = Meal.fromJson(cand));
+      return;
+    }
+    for (final cand in pool) {
+      if (cand['name'] != meal.name) {
+        setState(() => _meals[day][mealIdx] = Meal.fromJson(cand));
+        return;
+      }
+    }
+  }
+
+  List<String> get _shopping {
+    final set = <String>{};
+    for (final day in _meals) {
+      for (final m in day) {
+        set.addAll(m.ingredients);
+      }
+    }
+    return set.toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final singleDay = plan.days.length == 1;
+    final singleDay = _meals.length == 1;
     return Scaffold(
       appBar: AppBar(title: const Text('Yemek Önerilerin')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Ekranın ne olduğunu basitçe anlatan kutu.
           _InfoBox(singleDay: singleDay),
           const SizedBox(height: 14),
-
-          // Alışveriş listesi büyük düğme.
-          _ShoppingButton(items: plan.shoppingList),
+          _ServingsCard(
+            servings: _servings,
+            onChanged: (v) => setState(() => _servings = v),
+          ),
+          const SizedBox(height: 12),
+          _ShoppingButton(items: _shopping),
           const SizedBox(height: 20),
-
           if (singleDay)
-            // Tek gün: her şeyi açık göster.
-            ...plan.days.first.meals.map((m) => _MealCard(meal: m))
+            ...List.generate(
+              _meals.first.length,
+              (i) => _MealCard(
+                meal: _meals.first[i],
+                servings: _servings,
+                onSwap: () => _swap(0, i),
+              ),
+            )
           else
-            // Çok gün: her gün için dokunup açılan kart.
-            ...plan.days.map((d) => _DayCard(day: d)),
+            ...List.generate(_meals.length, (d) => _DayCard(
+                  label: _labels[d],
+                  dayNo: _dayNos[d],
+                  meals: _meals[d],
+                  servings: _servings,
+                  onSwap: (i) => _swap(d, i),
+                )),
         ],
       ),
     );
@@ -55,14 +129,55 @@ class _InfoBox extends StatelessWidget {
           Expanded(
             child: Text(
               singleDay
-                  ? 'İşte bugün pişirebileceğin yemekler. Her yemeğin altında '
-                      'MALZEMELER ve ADIM ADIM yapılışı yazıyor.'
-                  : 'Aşağıda her gün için yemekler var. Bir güne DOKUN, o günün '
-                      'yemekleri açılsın. Her yemeğin malzemesi ve yapılışı yazıyor.',
+                  ? 'İşte bugün pişirebileceğin yemekler. Beğenmezsen "🔄 Başka" '
+                      'ile değiştir. Yapmak istediğine "👨‍🍳 Adım adım pişir"e dokun.'
+                  : 'Her gün için yemekler var. Bir güne DOKUN, açılsın. Beğenmediğini '
+                      '"🔄 Başka" ile değiştirebilirsin.',
               style: TextStyle(fontSize: 16, color: scheme.onSecondaryContainer, height: 1.3),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ServingsCard extends StatelessWidget {
+  final int servings;
+  final ValueChanged<int> onChanged;
+  const _ServingsCard({required this.servings, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            const Text('👥', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text('Kaç kişilik?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            IconButton.filledTonal(
+              iconSize: 28,
+              onPressed: servings > 1 ? () => onChanged(servings - 1) : null,
+              icon: const Icon(Icons.remove),
+            ),
+            SizedBox(
+              width: 44,
+              child: Text('$servings',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+            IconButton.filledTonal(
+              iconSize: 28,
+              onPressed: servings < 20 ? () => onChanged(servings + 1) : null,
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -93,12 +208,11 @@ String _mealEmoji(String type) => switch (type) {
       _ => '🥄',
     };
 
-// Birbiriyle uyumlu, sıcak-soğuk dengeli palet.
 Color _mealColor(String type, ColorScheme s) => switch (type) {
-      'breakfast' => const Color(0xFFE8A317), // bal sarısı
-      'lunch' => const Color(0xFF2F9E5B), // taze yeşil
-      'dinner' => const Color(0xFFD86A3C), // terakota
-      'snack' => const Color(0xFF2B9E8D), // deniz yeşili
+      'breakfast' => const Color(0xFFE8A317),
+      'lunch' => const Color(0xFF2F9E5B),
+      'dinner' => const Color(0xFFD86A3C),
+      'snack' => const Color(0xFF2B9E8D),
       _ => s.primary,
     };
 
@@ -111,8 +225,18 @@ String _mealLabel(String type) => switch (type) {
     };
 
 class _DayCard extends StatelessWidget {
-  final DayPlan day;
-  const _DayCard({required this.day});
+  final String label;
+  final int dayNo;
+  final List<Meal> meals;
+  final int servings;
+  final ValueChanged<int> onSwap;
+  const _DayCard({
+    required this.label,
+    required this.dayNo,
+    required this.meals,
+    required this.servings,
+    required this.onSwap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -123,14 +247,16 @@ class _DayCard extends StatelessWidget {
       child: ExpansionTile(
         shape: const Border(),
         collapsedShape: const Border(),
-        initiallyExpanded: day.day == 1,
+        initiallyExpanded: dayNo == 1,
         leading: const Text('📅', style: TextStyle(fontSize: 28)),
-        title: Text(day.label,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        subtitle: Text('👉 Dokun, ${day.meals.length} yemeği gör',
+        title: Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        subtitle: Text('👉 Dokun, ${meals.length} yemeği gör',
             style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        children: day.meals.map((m) => _MealCard(meal: m)).toList(),
+        children: List.generate(
+          meals.length,
+          (i) => _MealCard(meal: meals[i], servings: servings, onSwap: () => onSwap(i)),
+        ),
       ),
     );
   }
@@ -138,23 +264,33 @@ class _DayCard extends StatelessWidget {
 
 class _MealCard extends StatelessWidget {
   final Meal meal;
-  const _MealCard({required this.meal});
+  final int servings;
+  final VoidCallback onSwap;
+  const _MealCard({required this.meal, required this.servings, required this.onSwap});
+
+  double get _factor {
+    final base = meal.servings;
+    if (base == null || base <= 0) return 1.0;
+    return servings / base;
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final color = _mealColor(meal.type, scheme);
+    final factor = _factor;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Renkli başlık: hangi öğün + yemek adı.
+          // Renkli başlık + "Başka öner"
           Container(
             width: double.infinity,
             color: color,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
             child: Row(
               children: [
                 Text(_mealEmoji(meal.type), style: const TextStyle(fontSize: 30)),
@@ -179,6 +315,12 @@ class _MealCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                TextButton.icon(
+                  onPressed: onSwap,
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  icon: const Text('🔄', style: TextStyle(fontSize: 18)),
+                  label: const Text('Başka', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
               ],
             ),
           ),
@@ -187,30 +329,17 @@ class _MealCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (meal.prepMinutes != null || meal.servings != null)
+                if (meal.prepMinutes != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        if (meal.prepMinutes != null)
-                          _pill(context, '⏱️ ${meal.prepMinutes} dakika'),
-                        if (meal.servings != null) ...[
-                          const SizedBox(width: 8),
-                          _pill(context, '👥 ${meal.servings} kişilik'),
-                        ],
-                      ],
-                    ),
+                    child: _pill(context, '⏱️ ${meal.prepMinutes} dakika'),
                   ),
 
-                // MALZEMELER
+                // NELER GEREKİYOR
                 Row(children: [
                   const Text('🧺 ', style: TextStyle(fontSize: 18)),
-                  Text('NELER GEREKİYOR?',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.primary,
-                      )),
+                  Text('NELER GEREKİYOR? ($servings kişilik)',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: scheme.primary)),
                 ]),
                 const SizedBox(height: 6),
                 ...meal.ingredients.map((i) => Padding(
@@ -219,21 +348,19 @@ class _MealCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('•  ', style: TextStyle(fontSize: 18)),
-                          Expanded(child: Text(i, style: const TextStyle(fontSize: 16))),
+                          Expanded(
+                              child: Text(scaleIngredient(i, factor),
+                                  style: const TextStyle(fontSize: 16))),
                         ],
                       ),
                     )),
 
                 const SizedBox(height: 14),
-                // YAPILIŞI
+                // NASIL YAPILIR
                 Row(children: [
                   const Text('👨‍🍳 ', style: TextStyle(fontSize: 18)),
                   Text('NASIL YAPILIR?',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.primary,
-                      )),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: scheme.primary)),
                 ]),
                 const SizedBox(height: 8),
                 if (meal.steps.isNotEmpty)
@@ -241,6 +368,37 @@ class _MealCard extends StatelessWidget {
                       (i) => _StepRow(index: i + 1, text: meal.steps[i], color: color))
                 else
                   Text(meal.recipe, style: const TextStyle(fontSize: 16, height: 1.35)),
+
+                const SizedBox(height: 12),
+                // Adım adım pişir + Sesli oku
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: color,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => CookingModeScreen(meal: meal)),
+                        ),
+                        icon: const Text('👨‍🍳', style: TextStyle(fontSize: 20)),
+                        label: const Text('Adım adım pişir'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                        onPressed: () => TtsService.speak(
+                          meal.steps.isNotEmpty ? meal.steps.join('. ') : meal.recipe,
+                        ),
+                        child: const Text('📢 Oku', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -355,7 +513,6 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
       ),
       body: Column(
         children: [
-          // Açıklama + ilerleme
           Container(
             width: double.infinity,
             color: scheme.primaryContainer,
@@ -365,10 +522,7 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
               children: [
                 Text('🛒 Markete gidince bunları al',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onPrimaryContainer,
-                    )),
+                        fontSize: 18, fontWeight: FontWeight.bold, color: scheme.onPrimaryContainer)),
                 const SizedBox(height: 4),
                 Text('Aldığın şeyin üstüne dokun; çizilsin.',
                     style: TextStyle(fontSize: 15, color: scheme.onPrimaryContainer)),
@@ -384,10 +538,7 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
                 const SizedBox(height: 6),
                 Text('$done / $total alındı',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onPrimaryContainer,
-                    )),
+                        fontSize: 14, fontWeight: FontWeight.bold, color: scheme.onPrimaryContainer)),
               ],
             ),
           ),
@@ -399,8 +550,7 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
                 final checked = _checked.contains(i);
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  onTap: () =>
-                      setState(() => checked ? _checked.remove(i) : _checked.add(i)),
+                  onTap: () => setState(() => checked ? _checked.remove(i) : _checked.add(i)),
                   leading: Icon(
                     checked ? Icons.check_circle : Icons.radio_button_unchecked,
                     color: checked ? scheme.primary : scheme.outline,

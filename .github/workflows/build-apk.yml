@@ -57,6 +57,33 @@ jobs:
           echo "----- AndroidManifest.xml -----"
           cat "$MANIFEST"
 
+      - name: Core library desugaring'i aç (bildirim paketi için)
+        run: |
+          python3 - <<'PY'
+          import os
+          app = 'android/app'
+          kts = os.path.join(app, 'build.gradle.kts')
+          groovy = os.path.join(app, 'build.gradle')
+          if os.path.exists(kts):
+              f = kts; s = open(f).read()
+              if 'isCoreLibraryDesugaringEnabled' not in s and 'compileOptions {' in s:
+                  s = s.replace('compileOptions {', 'compileOptions {\n        isCoreLibraryDesugaringEnabled = true', 1)
+              if 'desugar_jdk_libs' not in s:
+                  s = s.rstrip() + '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+              open(f, 'w').write(s)
+              print('Patched', f)
+          elif os.path.exists(groovy):
+              f = groovy; s = open(f).read()
+              if 'coreLibraryDesugaringEnabled' not in s and 'compileOptions {' in s:
+                  s = s.replace('compileOptions {', 'compileOptions {\n        coreLibraryDesugaringEnabled true', 1)
+              if 'desugar_jdk_libs' not in s:
+                  s = s.rstrip() + "\n\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n}\n"
+              open(f, 'w').write(s)
+              print('Patched', f)
+          PY
+          echo "----- app build gradle -----"
+          cat android/app/build.gradle.kts 2>/dev/null || cat android/app/build.gradle
+
       - name: Bağımlılıkları al
         run: flutter pub get
 

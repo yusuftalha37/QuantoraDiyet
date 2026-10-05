@@ -7,6 +7,7 @@ import '../demo_data.dart';
 import '../widgets/cooking_loader.dart';
 import 'plan_screen.dart';
 import 'onboarding_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -98,6 +99,13 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text('Merhaba, ${state.displayName ?? ''}'),
         actions: [
+          IconButton(
+            tooltip: 'Hatırlatma',
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Mutfağım',
             icon: const Icon(Icons.tune),
