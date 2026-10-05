@@ -94,10 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Merhaba, ${state.displayName ?? ''}'),
+        title: const Text('Bugün Ne Pişirsem?', overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
             tooltip: 'Hatırlatma',

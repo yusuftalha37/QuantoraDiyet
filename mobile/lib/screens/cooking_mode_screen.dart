@@ -76,7 +76,7 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => setState(() => _i--),
-                        child: const Text('← Geri'),
+                        child: const FittedBox(child: Text('← Geri')),
                       ),
                     ),
                   if (_i > 0) const SizedBox(width: 12),
@@ -90,11 +90,17 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
                           setState(() => _i++);
                         }
                       },
-                      child: Text(last ? '🎉 Bitti, Afiyet olsun!' : 'İleri →'),
+                      child: FittedBox(child: Text(last ? '🎉 Bitti!' : 'İleri →')),
                     ),
                   ),
                 ],
               ),
+              if (last)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text('Afiyet olsun! 🍽️',
+                      style: TextStyle(fontSize: 16, color: scheme.primary)),
+                ),
             ],
           ),
         ),

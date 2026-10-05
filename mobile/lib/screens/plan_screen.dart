@@ -370,34 +370,26 @@ class _MealCard extends StatelessWidget {
                   Text(meal.recipe, style: const TextStyle(fontSize: 16, height: 1.35)),
 
                 const SizedBox(height: 12),
-                // Adım adım pişir + Sesli oku
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: color,
-                          minimumSize: const Size.fromHeight(52),
-                        ),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => CookingModeScreen(meal: meal)),
-                        ),
-                        icon: const Text('👨‍🍳', style: TextStyle(fontSize: 20)),
-                        label: const Text('Adım adım pişir'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-                        onPressed: () => TtsService.speak(
-                          meal.steps.isNotEmpty ? meal.steps.join('. ') : meal.recipe,
-                        ),
-                        child: const Text('📢 Oku', style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                  ],
+                // Adım adım pişir + Sesli oku (alt alta, tam genişlik — taşma olmaz)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: color,
+                    minimumSize: const Size.fromHeight(54),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => CookingModeScreen(meal: meal)),
+                  ),
+                  icon: const Text('👨‍🍳', style: TextStyle(fontSize: 22)),
+                  label: const Text('Adım adım pişir'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+                  onPressed: () => TtsService.speak(
+                    meal.steps.isNotEmpty ? meal.steps.join('. ') : meal.recipe,
+                  ),
+                  icon: const Text('📢', style: TextStyle(fontSize: 20)),
+                  label: const Text('Sesli oku'),
                 ),
               ],
             ),
