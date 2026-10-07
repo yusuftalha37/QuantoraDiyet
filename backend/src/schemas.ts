@@ -35,6 +35,10 @@ export const refreshSchema = z
   .object({ refreshToken: z.string().min(10).max(512) })
   .strict();
 
+export const googleSchema = z
+  .object({ idToken: z.string().min(10).max(4096) })
+  .strict();
+
 // ---- Profile / onboarding ----
 export const profileSchema = z
   .object({

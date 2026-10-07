@@ -5,7 +5,7 @@ import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/auth.js';
 import { authLimiter, aiLimiter } from '../middleware/rateLimit.js';
 import {
-  registerSchema, loginSchema, refreshSchema, profileSchema, pantrySetSchema, generatePlanSchema,
+  registerSchema, loginSchema, refreshSchema, googleSchema, profileSchema, pantrySetSchema, generatePlanSchema,
 } from '../schemas.js';
 import * as auth from '../controllers/auth.controller.js';
 import * as profile from '../controllers/profile.controller.js';
@@ -18,12 +18,14 @@ const idParam = z.object({ id: z.string().uuid('Geçersiz kimlik') });
 // ---- Auth ----
 apiRouter.post('/auth/register', authLimiter, validate(registerSchema), asyncHandler(auth.register));
 apiRouter.post('/auth/login', authLimiter, validate(loginSchema), asyncHandler(auth.login));
+apiRouter.post('/auth/google', authLimiter, validate(googleSchema), asyncHandler(auth.google));
 apiRouter.post('/auth/refresh', validate(refreshSchema), asyncHandler(auth.refresh));
 apiRouter.post('/auth/logout', validate(refreshSchema), asyncHandler(auth.logout));
 apiRouter.post('/auth/logout-all', requireAuth, asyncHandler(auth.logoutAll));
 
 // ---- Profile / onboarding ----
 apiRouter.get('/me', requireAuth, asyncHandler(profile.me));
+apiRouter.delete('/me', requireAuth, asyncHandler(profile.deleteAccount));
 apiRouter.patch('/profile', requireAuth, validate(profileSchema), asyncHandler(profile.saveProfile));
 apiRouter.get('/pantry', requireAuth, asyncHandler(profile.getPantryItems));
 apiRouter.patch('/pantry', requireAuth, validate(pantrySetSchema), asyncHandler(profile.savePantry));

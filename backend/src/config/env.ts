@@ -28,6 +28,10 @@ const schema = z.object({
   AI_MODEL: z.string().default('claude-opus-4-8'),
   AI_MAX_TOKENS: z.coerce.number().int().positive().default(4096),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
+
+  // Google ile giriş: kabul edilen OAuth client ID'leri (virgülle ayrılmış).
+  // Boşsa Google girişi devre dışıdır.
+  GOOGLE_CLIENT_IDS: z.string().optional().default(''),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -57,6 +61,9 @@ export const env = {
   ...raw,
   isProd: raw.NODE_ENV === 'production',
   corsOrigins: raw.CORS_ORIGINS.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean),
+  googleClientIds: raw.GOOGLE_CLIENT_IDS.split(',')
     .map((o) => o.trim())
     .filter(Boolean),
 };

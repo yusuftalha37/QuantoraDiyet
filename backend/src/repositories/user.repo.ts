@@ -69,3 +69,8 @@ export async function updatePassword(userId: string, passwordHash: string): Prom
     passwordHash,
   ]);
 }
+
+/** Kullanıcıyı ve (cascade ile) profil/pantry/plan/token'larını siler. */
+export async function deleteUser(userId: string): Promise<void> {
+  await query(`DELETE FROM users WHERE id = $1`, [userId]);
+}

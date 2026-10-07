@@ -20,6 +20,12 @@ export async function login(req: Request, res: Response): Promise<void> {
   res.json(result);
 }
 
+export async function google(req: Request, res: Response): Promise<void> {
+  const { idToken } = req.body as { idToken: string };
+  const result = await authService.loginWithGoogle(idToken, ua(req));
+  res.json(result);
+}
+
 export async function refresh(req: Request, res: Response): Promise<void> {
   const { refreshToken } = req.body as { refreshToken: string };
   const result = await authService.refresh(refreshToken, ua(req));

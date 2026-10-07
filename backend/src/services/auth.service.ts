@@ -1,6 +1,8 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { env } from '../config/env.js';
 import { conflict, unauthorized, forbidden } from '../utils/errors.js';
+import { verifyGoogleIdToken } from './google.js';
 import {
   createUser,
   findUserByEmail,
@@ -66,6 +68,23 @@ export async function login(
   }
 
   await resetFailedLogins(user.id);
+  return issueSession(user.id, user.email, user.display_name, userAgent);
+}
+
+export async function loginWithGoogle(
+  idToken: string,
+  userAgent: string | null,
+): Promise<AuthResult> {
+  const g = await verifyGoogleIdToken(idToken);
+  let user = await findUserByEmail(g.email);
+  if (!user) {
+    // Google kullanıcısına parola ile giriş kapalı; rastgele kullanılamaz hash.
+    const randomPw = crypto.randomBytes(24).toString('hex');
+    const hash = await bcrypt.hash(randomPw, env.BCRYPT_ROUNDS);
+    const displayName = (g.name && g.name.trim()) || g.email.split('@')[0];
+    user = await createUser(g.email, hash, displayName);
+  }
+  if (!user.is_active) throw forbidden('Hesap devre dışı');
   return issueSession(user.id, user.email, user.display_name, userAgent);
 }
 

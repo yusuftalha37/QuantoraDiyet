@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../config.dart';
 import '../state/app_state.dart';
 import '../services/api_client.dart';
 import 'register_screen.dart';
@@ -37,6 +39,34 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _error = e.message);
     } catch (_) {
       setState(() => _error = 'Bağlantı hatası. Sunucuya ulaşılamadı.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _google() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final gsi = GoogleSignIn(
+        serverClientId: AppConfig.googleServerClientId,
+        scopes: const ['email'],
+      );
+      final account = await gsi.signIn();
+      if (account == null) {
+        setState(() => _loading = false);
+        return; // kullanıcı iptal etti
+      }
+      final gAuth = await account.authentication;
+      final idToken = gAuth.idToken;
+      if (idToken == null) throw Exception('idToken alınamadı');
+      await context.read<AppState>().loginWithGoogle(idToken);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Google ile giriş yapılamadı.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -104,6 +134,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             MaterialPageRoute(builder: (_) => const RegisterScreen())),
                     child: const Text('Hesabın yok mu? Kayıt ol'),
                   ),
+                  if (AppConfig.googleEnabled) ...[
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: _loading ? null : _google,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Google ile giriş yap'),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   OutlinedButton.icon(
                     onPressed: _loading ? null : () => context.read<AppState>().enterDemo(),

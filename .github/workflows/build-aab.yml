@@ -1,0 +1,130 @@
+name: Play için imzalı AAB
+
+# Google Play'e yüklenecek İMZALI App Bundle (.aab) üretir.
+# Önce şu GitHub Secrets'ları ekle (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64  -> upload-keystore.jks dosyasının base64 hâli
+#       (oluşturmak için: base64 -w0 upload-keystore.jks)
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS
+#   API_BASE_URL             -> https://senin-backend/api/v1
+#   GOOGLE_SERVER_CLIENT_ID  -> (opsiyonel) Google giriş web client ID
+# Sonra: Actions → "Play için imzalı AAB" → Run workflow.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Android platform klasörünü üret
+        run: flutter create --platforms=android --org com.quantora --project-name quantoradiyet .
+
+      - name: INTERNET izni + desugaring + imzalama yapılandırması
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PW: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -e
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "HATA: ANDROID_KEYSTORE_BASE64 secret'ı yok. Önce imzalama anahtarını ekle." >&2
+            exit 1
+          fi
+          # 1) INTERNET izni
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          grep -q "android.permission.INTERNET" "$MANIFEST" || \
+            sed -i 's#<manifest\(.*\)>#<manifest\1>\n    <uses-permission android:name="android.permission.INTERNET"/>#' "$MANIFEST"
+
+          # 2) Keystore'u yaz ve key.properties oluştur
+          echo "$KEYSTORE_B64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$STORE_PW
+          keyPassword=$KEY_PW
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+
+          # 3) build.gradle(.kts): desugaring + release imzalama
+          python3 - <<'PY'
+          import os
+          app='android/app'
+          kts=os.path.join(app,'build.gradle.kts'); gr=os.path.join(app,'build.gradle')
+          if os.path.exists(kts):
+              s=open(kts).read()
+              if 'keystoreProperties' not in s:
+                  s=('import java.util.Properties\nimport java.io.FileInputStream\n\n'
+                     'val keystoreProperties = Properties()\n'
+                     'val keystorePropertiesFile = rootProject.file("key.properties")\n'
+                     'if (keystorePropertiesFile.exists()) { keystoreProperties.load(FileInputStream(keystorePropertiesFile)) }\n\n') + s
+              if 'isCoreLibraryDesugaringEnabled' not in s and 'compileOptions {' in s:
+                  s=s.replace('compileOptions {','compileOptions {\n        isCoreLibraryDesugaringEnabled = true',1)
+              if 'signingConfigs {' not in s:
+                  s=s.replace('android {',
+                      'android {\n    signingConfigs {\n        create("release") {\n'
+                      '            keyAlias = keystoreProperties["keyAlias"] as String?\n'
+                      '            keyPassword = keystoreProperties["keyPassword"] as String?\n'
+                      '            storeFile = (keystoreProperties["storeFile"] as String?)?.let { file(it) }\n'
+                      '            storePassword = keystoreProperties["storePassword"] as String?\n'
+                      '        }\n    }',1)
+              s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("release")')
+              if 'desugar_jdk_libs' not in s:
+                  s=s.rstrip()+'\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+              open(kts,'w').write(s); print('KTS patched')
+          elif os.path.exists(gr):
+              s=open(gr).read()
+              if 'keystoreProperties' not in s:
+                  s=('def keystoreProperties = new Properties()\n'
+                     'def keystorePropertiesFile = rootProject.file("key.properties")\n'
+                     'if (keystorePropertiesFile.exists()) { keystoreProperties.load(new FileInputStream(keystorePropertiesFile)) }\n\n')+s
+              if 'coreLibraryDesugaringEnabled' not in s and 'compileOptions {' in s:
+                  s=s.replace('compileOptions {','compileOptions {\n        coreLibraryDesugaringEnabled true',1)
+              if 'signingConfigs {' not in s:
+                  s=s.replace('android {',
+                      'android {\n    signingConfigs {\n        release {\n'
+                      "            keyAlias keystoreProperties['keyAlias']\n"
+                      "            keyPassword keystoreProperties['keyPassword']\n"
+                      "            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null\n"
+                      "            storePassword keystoreProperties['storePassword']\n"
+                      '        }\n    }',1)
+              s=s.replace('signingConfig signingConfigs.debug','signingConfig signingConfigs.release')
+              if 'desugar_jdk_libs' not in s:
+                  s=s.rstrip()+"\n\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n}\n"
+              open(gr,'w').write(s); print('Groovy patched')
+          PY
+          echo "----- app build gradle -----"
+          cat android/app/build.gradle.kts 2>/dev/null || cat android/app/build.gradle
+
+      - name: Bağımlılıkları al
+        run: flutter pub get
+
+      - name: İmzalı AAB derle
+        run: |
+          ARGS="--dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}"
+          if [ -n "${{ secrets.GOOGLE_SERVER_CLIENT_ID }}" ]; then
+            ARGS="$ARGS --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}"
+          fi
+          flutter build appbundle --release $ARGS
+
+      - name: AAB'yi yükle (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: quantoradiyet-aab
+          path: mobile/build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14

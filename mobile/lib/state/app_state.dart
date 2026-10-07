@@ -79,6 +79,23 @@ class AppState extends ChangeNotifier {
     await _completeAuth(data);
   }
 
+  Future<void> loginWithGoogle(String idToken) async {
+    final data = await _api.post('/auth/google', body: {'idToken': idToken}, auth: false);
+    await _completeAuth(data);
+  }
+
+  Future<void> deleteAccount() async {
+    await _api.delete('/me');
+    await _store.clear();
+    status = AuthStatus.signedOut;
+    displayName = null;
+    email = null;
+    profile = null;
+    onboardingComplete = false;
+    demo = false;
+    notifyListeners();
+  }
+
   Future<void> _completeAuth(Map<String, dynamic> data) async {
     await _store.saveTokens(data['accessToken'] as String, data['refreshToken'] as String);
     await loadMe();

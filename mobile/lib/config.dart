@@ -12,4 +12,13 @@ class AppConfig {
 
   static const String appName = 'Bugün Ne Pişirsem?';
   static const Duration requestTimeout = Duration(seconds: 35);
+
+  /// Google ile giriş için WEB OAuth client ID'si (serverClientId).
+  /// Boşsa Google giriş düğmesi görünmez.
+  ///   flutter build apk --dart-define=GOOGLE_SERVER_CLIENT_ID=xxx.apps.googleusercontent.com
+  static const String googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '',
+  );
+  static bool get googleEnabled => googleServerClientId.isNotEmpty;
 }

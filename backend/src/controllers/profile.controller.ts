@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { getProfile, upsertProfile, getPantry, replacePantry } from '../repositories/profile.repo.js';
-import { findUserById } from '../repositories/user.repo.js';
+import { findUserById, deleteUser } from '../repositories/user.repo.js';
 import type { ProfileInput, PantrySetInput } from '../schemas.js';
 import { notFound } from '../utils/errors.js';
 
@@ -40,5 +40,11 @@ export async function getPantryItems(req: Request, res: Response): Promise<void>
 export async function savePantry(req: Request, res: Response): Promise<void> {
   const { items } = req.body as PantrySetInput;
   await replacePantry(req.auth!.userId, items);
+  res.status(204).send();
+}
+
+/** Hesabı ve tüm verilerini kalıcı olarak siler (Google Play zorunluluğu). */
+export async function deleteAccount(req: Request, res: Response): Promise<void> {
+  await deleteUser(req.auth!.userId);
   res.status(204).send();
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/reminder_service.dart';
 import '../services/secure_store.dart';
+import '../services/api_client.dart';
+import '../state/app_state.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -49,6 +52,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (picked == null) return;
     setState(() => _time = picked);
     if (_on) await ReminderService.enable(picked.hour, picked.minute);
+  }
+
+  Future<void> _deleteAccount() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hesabımı sil'),
+        content: const Text(
+          'Hesabın ve tüm verilerin (profil, malzemeler, öneriler) kalıcı olarak '
+          'silinecek. Bu işlem geri alınamaz. Emin misin?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Evet, sil'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await context.read<AppState>().deleteAccount();
+      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Hesap silinemedi. Bağlantıyı kontrol et.')));
+      }
+    }
   }
 
   @override
@@ -101,6 +139,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: _on ? _pickTime : null,
                   ),
                 ),
+
+                // Hesap silme — yalnızca gerçek hesapla girişte (demo değil).
+                if (!context.watch<AppState>().demo) ...[
+                  const SizedBox(height: 28),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: scheme.error,
+                      side: BorderSide(color: scheme.error),
+                      minimumSize: const Size.fromHeight(54),
+                    ),
+                    onPressed: _deleteAccount,
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Hesabımı sil'),
+                  ),
+                ],
               ],
             ),
     );
