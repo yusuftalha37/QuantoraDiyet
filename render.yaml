@@ -1,0 +1,40 @@
+# Render.com "Blueprint" — backend'i + PostgreSQL'i tek tıkla kurar.
+# Kullanım: render.com hesabı aç → New + → Blueprint → bu repoyu seç.
+# Render servis ve veritabanını bu dosyaya göre oluşturur.
+#
+# NOT: Ücretli planlar gerçek/kalıcı kullanım içindir. Ücretsiz Postgri
+# tiers süreli olabilir; üretimde ücretli (starter) önerilir.
+
+services:
+  - type: web
+    name: quantoradiyet-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    preDeployCommand: node dist/db/migrate.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quantoradiyet-db
+          property: connectionString
+      # Mobil uygulama "Origin" göndermez; CORS'u boş bırakmak güvenli.
+      - key: CORS_ORIGINS
+        value: ""
+      # Yapay zekâ önerileri için Anthropic kullanmak istersen:
+      #   AI_PROVIDER=anthropic ve ANTHROPIC_API_KEY ekle (karakter başına ücret).
+      - key: AI_PROVIDER
+        value: none
+
+databases:
+  - name: quantoradiyet-db
+    plan: starter

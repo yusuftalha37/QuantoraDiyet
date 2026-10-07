@@ -100,3 +100,29 @@ Her yeni yüklemede `versionCode` artır (`pubspec.yaml`'da `version: 1.0.1+2`
 ## Güvenlik hatırlatmaları
 - `key.properties`, `*.jks`, `google-services.json` **repoya girmez** (zaten .gitignore'da).
 - API anahtarları yalnızca backend'de; `.aab` içine hiçbir sır konmaz.
+
+## 8. Uygulamayı ÜCRETLİ yapma (paralı satış)
+1. Play Console → uygulaman → **Monetize → Ürünler değil**, doğrudan
+   **Setup → App pricing** (Uygulama fiyatı) → **Paid** seç.
+2. Fiyatı belirle; Google ülkelere göre yerel fiyatları önerir (dilersen düzenle).
+3. **Merchant (satıcı) hesabı** gerekir: Play Console → **Payments profile**
+   oluştur (vergi/banka bilgileri). Bu olmadan ücretli yayınlayamazsın.
+4. Komisyon: Google satıştan pay alır (genelde %15–30).
+5. Not: Bir uygulama **yayınlandıktan sonra ücretsizden ücretliye çevrilemez**
+   (tersi mümkün). Ücretli olacaksa ilk yayından önce Paid seç.
+
+## 9. Hesap + sunucu kullandığın için ZORUNLU olanlar
+Backend'e (hesap/senkron) geçtiğin an kişisel veri topluyorsun demektir:
+- **Gizlilik politikası URL'si zorunlu.** Bir metin hazırla, bir yerde yayınla
+  (ör. basit bir web sayfası / GitHub Pages). Örnek taslak:
+  `docs/PRIVACY_POLICY_ornek.md`.
+- **Data Safety formu** gerçeği yansıtmalı: toplanan veriler (e-posta, profil,
+  evdeki malzemeler, öneri geçmişi), sunucuda saklanıyor, iletim şifreli (HTTPS),
+  kullanıcı hesabını/verisini silebiliyor (hesap silme akışı eklemen istenebilir).
+- Yanlış/eksik beyan uygulamanın reddine veya kaldırılmasına yol açar.
+
+## 10. Özet: hangi adım kimde?
+- **Bende (kod):** backend, Dockerfile, `render.yaml`, uygulama–hesap bağlantısı, rehberler.
+- **Sende (hesap/ücret):** sunucuyu kurup aylık ödemek (`docs/DEPLOY_BACKEND.md`),
+  gizlilik politikasını yayınlamak, Play'de Merchant hesabı + fiyat belirlemek,
+  imzalama anahtarını oluşturup saklamak.
