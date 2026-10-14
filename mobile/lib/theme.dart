@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 /// yüksek kontrastlı ve okunaklı. Modern "smart" görünüm: krem arka plan,
 /// yumuşak gölgeli yuvarlak kartlar, sıcak vurgu, akıcı sayfa geçişleri.
 class AppTheme {
-  static const _seed = Color(0xFF128C4B); // WhatsApp'a yakın, sıcak bir yeşil
+  // İştah açan sıcak turuncu — referans tasarımdaki ana renk.
+  static const _seed = Color(0xFFE8743B);
 
-  /// Sıcak vurgu (iştah açan turuncu) — öne çıkan küçük detaylarda.
+  /// Vurgu rengi (ana renkle aynı aileden, turuncu).
   static const accent = Color(0xFFE8743B);
+
+  /// Tamamlayıcı yeşil (bazı küçük detaylarda).
+  static const green = Color(0xFF128C4B);
 
   /// Koyu "karşılama" kartı rengi (ana ekran hero).
   static const heroDark = Color(0xFF26211D);

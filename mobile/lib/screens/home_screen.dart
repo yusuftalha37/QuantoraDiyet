@@ -268,14 +268,14 @@ class _BigSuggestButton extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(26),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [scheme.primary, const Color(0xFF0E6B3A)],
+            colors: [Color(0xFFF08A42), Color(0xFFD85E22)],
           ),
           boxShadow: [
             BoxShadow(
-              color: scheme.primary.withOpacity(0.38),
+              color: AppTheme.accent.withOpacity(0.40),
               blurRadius: 22,
               offset: const Offset(0, 10),
             ),
