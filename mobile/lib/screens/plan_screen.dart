@@ -4,6 +4,7 @@ import '../models/meal_plan.dart';
 import '../recipes.dart';
 import '../utils/scale.dart';
 import '../services/tts_service.dart';
+import '../widgets/anim.dart';
 import 'cooking_mode_screen.dart';
 
 class PlanScreen extends StatefulWidget {
@@ -88,19 +89,25 @@ class _PlanScreenState extends State<PlanScreen> {
           if (singleDay)
             ...List.generate(
               _meals.first.length,
-              (i) => _MealCard(
-                meal: _meals.first[i],
-                servings: _servings,
-                onSwap: () => _swap(0, i),
+              (i) => FadeSlideIn(
+                delayMs: 70 * i,
+                child: _MealCard(
+                  meal: _meals.first[i],
+                  servings: _servings,
+                  onSwap: () => _swap(0, i),
+                ),
               ),
             )
           else
-            ...List.generate(_meals.length, (d) => _DayCard(
-                  label: _labels[d],
-                  dayNo: _dayNos[d],
-                  meals: _meals[d],
-                  servings: _servings,
-                  onSwap: (i) => _swap(d, i),
+            ...List.generate(_meals.length, (d) => FadeSlideIn(
+                  delayMs: 70 * d,
+                  child: _DayCard(
+                    label: _labels[d],
+                    dayNo: _dayNos[d],
+                    meals: _meals[d],
+                    servings: _servings,
+                    onSwap: (i) => _swap(d, i),
+                  ),
                 )),
         ],
       ),
