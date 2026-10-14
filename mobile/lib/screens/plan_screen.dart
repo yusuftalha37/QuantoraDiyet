@@ -338,8 +338,10 @@ class _MealCard extends StatelessWidget {
                 // NELER GEREKİYOR
                 Row(children: [
                   const Text('🧺 ', style: TextStyle(fontSize: 18)),
-                  Text('NELER GEREKİYOR? ($servings kişilik)',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: scheme.primary)),
+                  Expanded(
+                    child: Text('NELER GEREKİYOR? ($servings kişilik)',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: scheme.primary)),
+                  ),
                 ]),
                 const SizedBox(height: 6),
                 ...meal.ingredients.map((i) => Padding(
@@ -359,8 +361,10 @@ class _MealCard extends StatelessWidget {
                 // NASIL YAPILIR
                 Row(children: [
                   const Text('👨‍🍳 ', style: TextStyle(fontSize: 18)),
-                  Text('NASIL YAPILIR?',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: scheme.primary)),
+                  Expanded(
+                    child: Text('NASIL YAPILIR?',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: scheme.primary)),
+                  ),
                 ]),
                 const SizedBox(height: 8),
                 if (meal.steps.isNotEmpty)

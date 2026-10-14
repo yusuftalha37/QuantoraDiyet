@@ -270,12 +270,14 @@ class _PeriodSheet extends StatelessWidget {
               children: [
                 Text(emoji, style: const TextStyle(fontSize: 32)),
                 const SizedBox(width: 16),
-                Text(label,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onPrimaryContainer,
-                    )),
+                Expanded(
+                  child: Text(label,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.onPrimaryContainer,
+                      )),
+                ),
               ],
             ),
           ),

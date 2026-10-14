@@ -29,6 +29,19 @@ class QuantoraApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      // Telefonun sistem yazı boyutu çok büyükse arayüz taşmasın: yazıları
+      // zaten iri yaptığımız için sistem ölçeğini makul bir aralığa sıkıştır.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        final clamped = mq.textScaler.clamp(
+          minScaleFactor: 1.0,
+          maxScaleFactor: 1.25,
+        );
+        return MediaQuery(
+          data: mq.copyWith(textScaler: clamped),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const _Root(),
     );
   }
