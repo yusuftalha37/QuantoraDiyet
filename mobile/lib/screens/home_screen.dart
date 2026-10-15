@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets/cooking_loader.dart';
 import '../widgets/shimmer.dart';
 import '../widgets/anim.dart';
+import '../widgets/glass.dart';
 import 'plan_screen.dart';
 import 'onboarding_screen.dart';
 import 'settings_screen.dart';
@@ -97,7 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Bugün Ne Pişirsem?', overflow: TextOverflow.ellipsis),
         actions: [
@@ -122,10 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
+      body: FrostedBackground(
+        child: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.fromLTRB(20, topInset, 20, 24),
           children: [
             const SizedBox(height: 4),
             const FadeSlideIn(child: _HeroCard()),
@@ -166,24 +170,32 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ...List.generate(_history.length, (i) {
               final p = _history[i];
-              return FadeSlideIn(
-                delayMs: 60 * i,
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    leading: const Text('🍽️', style: TextStyle(fontSize: 32)),
-                    title: Text('${_periodLabel(p['period']?.toString())} önerileri',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    trailing: const Icon(Icons.chevron_right, size: 28),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: FadeSlideIn(
+                  delayMs: 60 * i,
+                  child: GlassCard(
+                    radius: 20,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     onTap: () => _openPlan(p['id'].toString()),
+                    child: Row(
+                      children: [
+                        const Text('🍽️', style: TextStyle(fontSize: 30)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text('${_periodLabel(p['period']?.toString())} önerileri',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                        const Icon(Icons.chevron_right, size: 28),
+                      ],
+                    ),
                   ),
                 ),
               );
             }),
           ],
         ),
+      ),
       ),
     );
   }
@@ -202,38 +214,24 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final onCard = Theme.of(context).colorScheme.onSurface;
+    return GlassCard(
+      radius: 28,
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2E2823), AppTheme.heroDark],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text('Merhaba 👋',
-                    style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600)),
-                SizedBox(height: 6),
+                    style: TextStyle(color: onCard.withOpacity(0.65), fontSize: 16, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
                 Text('Bugün ne pişirelim?',
-                    style: TextStyle(
-                        color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2)),
-                SizedBox(height: 8),
+                    style: TextStyle(color: onCard, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2)),
+                const SizedBox(height: 8),
                 Text('Alttaki düğmeye dokun, sana kolay yemekler önereyim.',
-                    style: TextStyle(color: Colors.white60, fontSize: 14, height: 1.3)),
+                    style: TextStyle(color: onCard.withOpacity(0.6), fontSize: 14, height: 1.3)),
               ],
             ),
           ),
@@ -243,9 +241,9 @@ class _HeroCard extends StatelessWidget {
             height: 58,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppTheme.accent.withOpacity(0.18),
+              color: AppTheme.accent.withOpacity(0.22),
               shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.accent.withOpacity(0.5), width: 2),
+              border: Border.all(color: AppTheme.accent.withOpacity(0.6), width: 2),
             ),
             child: const Text('🍲', style: TextStyle(fontSize: 30)),
           ),

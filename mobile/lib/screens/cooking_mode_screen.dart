@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/meal_plan.dart';
 import '../services/tts_service.dart';
+import '../widgets/glass.dart';
 
 /// Adım adım pişirme modu: her ekranda tek büyük adım, İleri/Geri ve sesli okuma.
 class CookingModeScreen extends StatefulWidget {
@@ -32,8 +33,10 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
     final last = _i == total - 1;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(title: Text(widget.meal.name)),
-      body: SafeArea(
+      body: FrostedBackground(
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -48,18 +51,23 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: scheme.primary)),
               const SizedBox(height: 20),
 
-              // Büyük adım metni
+              // Büyük adım metni (buzlu cam panel)
               Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      _steps[_i],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 26, height: 1.4),
+                child: GlassCard(
+                  radius: 26,
+                  padding: const EdgeInsets.all(22),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Text(
+                        _steps[_i],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 26, height: 1.4),
+                      ),
                     ),
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
 
               // Sesli oku
               OutlinedButton.icon(
@@ -104,6 +112,7 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

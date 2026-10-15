@@ -26,8 +26,8 @@ class AppTheme {
       brightness: brightness,
     ).copyWith(secondary: accent);
 
-    // Krem / sıcak nötr yüzey (referans tasarımdaki gibi).
-    final surface = isLight ? const Color(0xFFF5F2ED) : const Color(0xFF14110F);
+    // Buzlu cam zemini için sıcak taban (FrostedBackground degradesiyle uyumlu).
+    final surface = isLight ? const Color(0xFFFFF3E9) : const Color(0xFF17120F);
     final card = isLight ? Colors.white : const Color(0xFF221E1B);
 
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
@@ -44,9 +44,10 @@ class AppTheme {
         },
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: surface,
+        backgroundColor: Colors.transparent,
         foregroundColor: scheme.onSurface,
         surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         elevation: 0,
         titleTextStyle: TextStyle(

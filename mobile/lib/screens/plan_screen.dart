@@ -5,6 +5,7 @@ import '../recipes.dart';
 import '../utils/scale.dart';
 import '../services/tts_service.dart';
 import '../widgets/anim.dart';
+import '../widgets/glass.dart';
 import 'cooking_mode_screen.dart';
 
 class PlanScreen extends StatefulWidget {
@@ -72,10 +73,13 @@ class _PlanScreenState extends State<PlanScreen> {
   @override
   Widget build(BuildContext context) {
     final singleDay = _meals.length == 1;
+    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(title: const Text('Yemek Önerilerin')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: FrostedBackground(
+        child: ListView(
+        padding: EdgeInsets.fromLTRB(16, topInset, 16, 24),
         children: [
           _InfoBox(singleDay: singleDay),
           const SizedBox(height: 14),
@@ -111,6 +115,7 @@ class _PlanScreenState extends State<PlanScreen> {
                 )),
         ],
       ),
+      ),
     );
   }
 }
@@ -121,13 +126,9 @@ class _InfoBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    final onCard = Theme.of(context).colorScheme.onSurface;
+    return GlassCard(
+      radius: 20,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -140,7 +141,7 @@ class _InfoBox extends StatelessWidget {
                       'ile değiştir. Yapmak istediğine "👨‍🍳 Adım adım pişir"e dokun.'
                   : 'Her gün için yemekler var. Bir güne DOKUN, açılsın. Beğenmediğini '
                       '"🔄 Başka" ile değiştirebilirsin.',
-              style: TextStyle(fontSize: 16, color: scheme.onSecondaryContainer, height: 1.3),
+              style: TextStyle(fontSize: 16, color: onCard.withOpacity(0.85), height: 1.3),
             ),
           ),
         ],
@@ -156,10 +157,10 @@ class _ServingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
+    return GlassCard(
+      radius: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
           children: [
             const Text('👥', style: TextStyle(fontSize: 28)),
             const SizedBox(width: 12),
@@ -185,7 +186,6 @@ class _ServingsCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }
@@ -248,21 +248,27 @@ class _DayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
-        shape: const Border(),
-        collapsedShape: const Border(),
-        initiallyExpanded: dayNo == 1,
-        leading: const Text('📅', style: TextStyle(fontSize: 28)),
-        title: Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        subtitle: Text('👉 Dokun, ${meals.length} yemeği gör',
-            style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
-        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        children: List.generate(
-          meals.length,
-          (i) => _MealCard(meal: meals[i], servings: servings, onSwap: () => onSwap(i)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GlassCard(
+        radius: 22,
+        padding: EdgeInsets.zero,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            shape: const Border(),
+            collapsedShape: const Border(),
+            initiallyExpanded: dayNo == 1,
+            leading: const Text('📅', style: TextStyle(fontSize: 28)),
+            title: Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            subtitle: Text('👉 Dokun, ${meals.length} yemeği gör',
+                style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            children: List.generate(
+              meals.length,
+              (i) => _MealCard(meal: meals[i], servings: servings, onSwap: () => onSwap(i)),
+            ),
+          ),
         ),
       ),
     );
@@ -287,16 +293,18 @@ class _MealCard extends StatelessWidget {
     final color = _mealColor(meal.type, scheme);
     final factor = _factor;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.only(bottom: 14),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: GlassCard(
+      radius: 22,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Renkli başlık + "Başka öner"
           Container(
             width: double.infinity,
-            color: color,
+            color: color.withOpacity(0.92),
             padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
             child: Row(
               children: [
@@ -406,6 +414,7 @@ class _MealCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
