@@ -30,11 +30,19 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
   late final AnimationController _ctrl;
   Timer? _msgTimer;
   int _msgIndex = 0;
-  int _emojiIndex = 0;
+  int _iconIndex = 0;
 
-  // Yalnızca tek kod noktalı, her telefonda düzgün görünen emojiler
-  // (birleşik "aşçı" emojileri bazı cihazlarda kutu/bozuk çıkabiliyor).
-  static const _emojis = ['🍳', '🥘', '🍲', '🥗', '🍅', '🧅', '🥕', '🫑'];
+  // Emoji yerine Material ikonlar — her telefonda tutarlı ve net görünür.
+  static const _icons = <IconData>[
+    Icons.restaurant,
+    Icons.soup_kitchen,
+    Icons.ramen_dining,
+    Icons.lunch_dining,
+    Icons.local_fire_department,
+    Icons.bakery_dining,
+    Icons.outdoor_grill,
+    Icons.rice_bowl,
+  ];
   static const _messages = [
     'Tencere ocağa konuyor…',
     'Malzemeler doğranıyor…',
@@ -54,7 +62,7 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
       if (!mounted) return;
       setState(() {
         _msgIndex = (_msgIndex + 1) % _messages.length;
-        _emojiIndex = (_emojiIndex + 1) % _emojis.length;
+        _iconIndex = (_iconIndex + 1) % _icons.length;
       });
     });
     _run();
@@ -118,14 +126,15 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
                             .chain(CurveTween(curve: Curves.easeInOut))),
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 350),
-                          transitionBuilder: (c, a) => FadeTransition(
+                          transitionBuilder: (child, a) => FadeTransition(
                             opacity: a,
-                            child: ScaleTransition(scale: a, child: c),
+                            child: ScaleTransition(scale: a, child: child),
                           ),
-                          child: Text(
-                            _emojis[_emojiIndex],
-                            key: ValueKey(_emojiIndex),
-                            style: const TextStyle(fontSize: 72),
+                          child: Icon(
+                            _icons[_iconIndex],
+                            key: ValueKey(_iconIndex),
+                            size: 60,
+                            color: c.accent,
                           ),
                         ),
                       ),

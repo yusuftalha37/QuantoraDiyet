@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
-            Text('Merhaba 👋', style: Theme.of(context).textTheme.bodyMedium),
+            Text('Merhaba', style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 4),
             Text('Bugün ne pişirelim?', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 20),
