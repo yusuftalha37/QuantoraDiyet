@@ -99,12 +99,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                const Text('🔔', style: TextStyle(fontSize: 48), textAlign: TextAlign.center),
-                const SizedBox(height: 8),
+                Center(child: Icon(Icons.notifications_active_outlined, size: 40, color: scheme.primary)),
+                const SizedBox(height: 10),
                 Text('Günlük Hatırlatma',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                    style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
                 Text(
                   'Her gün belirlediğin saatte "Akşam ne pişireceğine karar '
@@ -118,16 +117,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: _on,
                     onChanged: _toggle,
                     title: const Text('Hatırlatma açık',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    secondary: const Text('⏰', style: TextStyle(fontSize: 28)),
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                    secondary: Icon(Icons.alarm_outlined, color: scheme.primary),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Card(
                   child: ListTile(
                     enabled: _on,
-                    leading: const Text('🕐', style: TextStyle(fontSize: 28)),
-                    title: const Text('Saat', style: TextStyle(fontSize: 18)),
+                    leading: const Icon(Icons.schedule_outlined),
+                    title: const Text('Saat', style: TextStyle(fontSize: 17)),
                     trailing: Text(
                       _time.format(context),
                       style: TextStyle(

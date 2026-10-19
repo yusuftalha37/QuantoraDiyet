@@ -51,7 +51,7 @@ class ReminderService {
     await _plugin.zonedSchedule(
       _id,
       'Bugün Ne Pişirsem?',
-      'Akşam ne pişireceğine karar verdin mi? 🍲 Dokun, öneri alalım.',
+      'Akşam ne pişireceğine karar verdin mi? Dokun, öneri alalım.',
       _nextInstance(hour, minute),
       const NotificationDetails(
         android: AndroidNotificationDetails(

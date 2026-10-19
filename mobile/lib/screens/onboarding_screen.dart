@@ -80,11 +80,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
-            const Center(child: Text('👋', style: TextStyle(fontSize: 64))),
-            const SizedBox(height: 12),
-            Text('Sana yemek önerelim!',
+            Center(child: Icon(Icons.restaurant_menu_rounded, size: 44, color: Theme.of(context).colorScheme.primary)),
+            const SizedBox(height: 14),
+            Text('Sana yemek önerelim',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 10),
             Text(
               'Hiçbir şey doldurmana gerek yok. Sadece başla; evinde genelde '
@@ -98,8 +98,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             FilledButton(
               onPressed: _saving ? null : _skip,
               child: _saving
-                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('🍳  HADİ BAŞLA'),
+                  ? const SizedBox(
+                      height: 22, width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Hadi başla'),
             ),
             const SizedBox(height: 20),
 
@@ -108,9 +110,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               clipBehavior: Clip.antiAlias,
               child: ExpansionTile(
                 shape: const Border(),
-                leading: const Text('⚙️', style: TextStyle(fontSize: 26)),
+                leading: const Icon(Icons.tune_rounded),
                 title: const Text('İstersen kendin seç',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: const Text('(isteğe bağlı)'),
                 childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: [

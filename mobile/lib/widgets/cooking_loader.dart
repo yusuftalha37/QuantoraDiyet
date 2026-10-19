@@ -32,7 +32,9 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
   int _msgIndex = 0;
   int _emojiIndex = 0;
 
-  static const _emojis = ['🍳', '🥘', '🍲', '👩‍🍳', '🧑‍🍳', '🥗', '🍅', '🧅'];
+  // Yalnızca tek kod noktalı, her telefonda düzgün görünen emojiler
+  // (birleşik "aşçı" emojileri bazı cihazlarda kutu/bozuk çıkabiliyor).
+  static const _emojis = ['🍳', '🥘', '🍲', '🥗', '🍅', '🧅', '🥕', '🫑'];
   static const _messages = [
     'Tencere ocağa konuyor…',
     'Malzemeler doğranıyor…',
