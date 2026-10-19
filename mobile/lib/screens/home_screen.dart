@@ -7,8 +7,7 @@ import '../demo_data.dart';
 import '../theme.dart';
 import '../widgets/cooking_loader.dart';
 import '../widgets/shimmer.dart';
-import '../widgets/anim.dart';
-import '../widgets/glass.dart';
+import '../widgets/ui.dart';
 import 'plan_screen.dart';
 import 'onboarding_screen.dart';
 import 'settings_screen.dart';
@@ -23,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _api = ApiClient.instance;
   List<Map<String, dynamic>> _history = [];
   bool _loading = true;
+  bool _failed = false;
 
   @override
   void initState() {
@@ -31,7 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
     if (context.read<AppState>().demo) {
       setState(() {
         _history = [];
@@ -43,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final history = await _api.get('/plans');
       setState(() => _history = (history['plans'] as List? ?? []).cast<Map<String, dynamic>>());
     } catch (_) {
-      // leave UI usable even if load fails
+      if (mounted) setState(() => _failed = true);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -53,12 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final period = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
+      backgroundColor: AppColors.of(context).paper,
       builder: (_) => const _PeriodSheet(),
     );
     if (period == null || !mounted) return;
     final demo = context.read<AppState>().demo;
 
-    // Eğlenceli "aşçı" bekleme ekranı; öneri hazırlanırken gösterilir.
     final outcome = await Navigator.of(context).push<LoaderOutcome>(
       MaterialPageRoute(
         fullscreenDialog: true,
@@ -73,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (!mounted || outcome == null) return;
     if (outcome.error != null || outcome.plan == null) {
-      _showError('Öneri alınamadı. Bağlantıyı kontrol edin.');
+      _showError('Öneri alınamadı. Bağlantını kontrol et.');
       return;
     }
     await Navigator.of(context).push(
@@ -98,104 +101,104 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topInset = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
+    final c = AppColors.of(context);
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Bugün Ne Pişirsem?', overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
             tooltip: 'Hatırlatma',
-            icon: const Icon(Icons.notifications_outlined),
+            icon: const Icon(Icons.notifications_none_rounded),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
             ),
           ),
           IconButton(
             tooltip: 'Mutfağım',
-            icon: const Icon(Icons.tune),
+            icon: const Icon(Icons.tune_rounded),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const OnboardingScreen()),
             ),
           ),
           IconButton(
             tooltip: 'Çıkış',
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded),
             onPressed: () => context.read<AppState>().logout(),
           ),
+          const SizedBox(width: 4),
         ],
       ),
-      body: FrostedBackground(
-        child: RefreshIndicator(
+      body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(20, topInset, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
+            Text('Merhaba 👋', style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 4),
-            const FadeSlideIn(child: _HeroCard()),
-            const SizedBox(height: 18),
-            // Ekranın ana aksiyonu. Tek dokunuş.
-            FadeSlideIn(delayMs: 80, child: _BigSuggestButton(onTap: _suggest)),
-            const SizedBox(height: 28),
-            Text('Daha önce önerdiklerim',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            if (_loading)
-              const Shimmer(
-                child: Column(
-                  children: [
-                    SkeletonListTileCard(),
-                    SkeletonListTileCard(),
-                    SkeletonListTileCard(),
-                  ],
-                ),
+            Text('Bugün ne pişirelim?', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 20),
+
+            // Tek net birincil eylem.
+            FilledButton(
+              onPressed: _suggest,
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(60)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.restaurant_rounded, size: 22),
+                  SizedBox(width: 10),
+                  Text('Bana yemek öner'),
+                ],
               ),
-            if (_history.isEmpty && !_loading)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
+            ),
+            const SizedBox(height: 8),
+            Text('Evinde genelde bulunan malzemelere göre öneri alırsın.',
+                style: Theme.of(context).textTheme.bodyMedium),
+
+            const SizedBox(height: 28),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SectionLabel('Önerilerim'),
+                const Spacer(),
+                if (!_loading && _history.isNotEmpty)
+                  Text('${_history.length}',
+                      style: TextStyle(color: c.inkMuted, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            if (_loading)
+              AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: const Shimmer(
                   child: Column(
                     children: [
-                      const Text('🥘', style: TextStyle(fontSize: 56)),
-                      const SizedBox(height: 12),
-                      Text('Henüz öneri yok',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text('Yukarıdaki büyük yeşil düğmeye bas.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      SkeletonListTileCard(),
+                      Divider(height: 1),
+                      SkeletonListTileCard(),
                     ],
                   ),
                 ),
-              ),
-            ...List.generate(_history.length, (i) {
-              final p = _history[i];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: FadeSlideIn(
-                  delayMs: 60 * i,
-                  child: GlassCard(
-                    radius: 20,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    onTap: () => _openPlan(p['id'].toString()),
-                    child: Row(
-                      children: [
-                        const Text('🍽️', style: TextStyle(fontSize: 30)),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Text('${_periodLabel(p['period']?.toString())} önerileri',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ),
-                        const Icon(Icons.chevron_right, size: 28),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }),
+              )
+            else if (_failed)
+              _StateMessage(
+                icon: Icons.wifi_off_rounded,
+                title: 'Önerilerin yüklenemedi',
+                detail: 'Bağlantını kontrol edip tekrar dene.',
+                actionLabel: 'Tekrar dene',
+                onAction: _load,
+              )
+            else if (_history.isEmpty)
+              _StateMessage(
+                icon: Icons.outdoor_grill_rounded,
+                title: 'Henüz öneri yok',
+                detail: 'Yukarıdaki düğmeye dokun, ilk önerini alalım.',
+              )
+            else
+              _HistoryList(items: _history, onOpen: _openPlan, periodLabel: _periodLabel),
           ],
         ),
-      ),
       ),
     );
   }
@@ -204,157 +207,139 @@ class _HomeScreenState extends State<HomeScreen> {
         'daily' => 'Bugün',
         'weekly' => 'Bu hafta',
         'monthly' => 'Bu ay',
-        _ => '',
+        _ => 'Öneri',
       };
 }
 
-/// Üstteki modern "karşılama" kartı (koyu, yuvarlak — referans tasarımdaki gibi).
-class _HeroCard extends StatelessWidget {
-  const _HeroCard();
+/// Geçmiş öneriler — tek kart içinde ince ayraçlı sade satırlar.
+class _HistoryList extends StatelessWidget {
+  final List<Map<String, dynamic>> items;
+  final void Function(String id) onOpen;
+  final String Function(String?) periodLabel;
+  const _HistoryList({required this.items, required this.onOpen, required this.periodLabel});
 
   @override
   Widget build(BuildContext context) {
-    final onCard = Theme.of(context).colorScheme.onSurface;
-    return GlassCard(
-      radius: 28,
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
-      child: Row(
+    final c = AppColors.of(context);
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Merhaba 👋',
-                    style: TextStyle(color: onCard.withOpacity(0.65), fontSize: 16, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 6),
-                Text('Bugün ne pişirelim?',
-                    style: TextStyle(color: onCard, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2)),
-                const SizedBox(height: 8),
-                Text('Alttaki düğmeye dokun, sana kolay yemekler önereyim.',
-                    style: TextStyle(color: onCard.withOpacity(0.6), fontSize: 14, height: 1.3)),
-              ],
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) Divider(height: 1, color: c.hairline),
+            InkWell(
+              onTap: () => onOpen(items[i]['id'].toString()),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.restaurant_menu_rounded, size: 22, color: c.inkMuted),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text('${periodLabel(items[i]['period']?.toString())} önerileri',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                    Icon(Icons.chevron_right_rounded, size: 24, color: c.inkMuted),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 58,
-            height: 58,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppTheme.accent.withOpacity(0.22),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.accent.withOpacity(0.6), width: 2),
-            ),
-            child: const Text('🍲', style: TextStyle(fontSize: 30)),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Ekranın ana aksiyonu: büyük, bariz, tek dokunuşluk yeşil düğme.
-class _BigSuggestButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _BigSuggestButton({required this.onTap});
+/// Boş / hata durumları için sade, ortak mesaj bloğu.
+class _StateMessage extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String detail;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  const _StateMessage({
+    required this.icon,
+    required this.title,
+    required this.detail,
+    this.actionLabel,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return PressableScale(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF08A42), Color(0xFFD85E22)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.accent.withOpacity(0.40),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
+    final c = AppColors.of(context);
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      child: Column(
+        children: [
+          Icon(icon, size: 34, color: c.inkMuted),
+          const SizedBox(height: 12),
+          Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+          const SizedBox(height: 6),
+          Text(detail, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+          if (actionLabel != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: onAction,
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 46)),
+              child: Text(actionLabel!),
             ),
           ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 34, horizontal: 20),
-          child: Column(
-            children: [
-              const Text('🍳', style: TextStyle(fontSize: 68)),
-              const SizedBox(height: 14),
-              Text('BUGÜN NE PİŞİREYİM?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: scheme.onPrimary,
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  )),
-              const SizedBox(height: 8),
-              Text('Dokun, sana yemek önereyim',
-                  style: TextStyle(color: scheme.onPrimary.withOpacity(0.9), fontSize: 16)),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Süre seçimi: üç büyük, tam genişlik düğme.
+/// Süre seçimi — sade, tam-genişlik satırlar (bugün / bu hafta / bu ay).
 class _PeriodSheet extends StatelessWidget {
   const _PeriodSheet();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Ne kadarlık öneri istersin?',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          _bigOption(context, '🍽️', 'Bugün için', 'daily'),
-          const SizedBox(height: 14),
-          _bigOption(context, '📅', 'Bu hafta için', 'weekly'),
-          const SizedBox(height: 14),
-          _bigOption(context, '🗓️', 'Bu ay için', 'monthly'),
-        ],
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Ne kadarlık öneri istersin?',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            _option(context, Icons.wb_sunny_outlined, 'Bugün', 'Tek günlük', 'daily'),
+            const SizedBox(height: 10),
+            _option(context, Icons.calendar_view_week_rounded, 'Bu hafta', '7 günlük', 'weekly'),
+            const SizedBox(height: 10),
+            _option(context, Icons.calendar_month_rounded, 'Bu ay', '30 günlük', 'monthly'),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _bigOption(BuildContext context, String emoji, String label, String value) {
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: () => Navigator.of(context).pop(value),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-            child: Row(
+  Widget _option(BuildContext context, IconData icon, String title, String sub, String value) {
+    final c = AppColors.of(context);
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      onTap: () => Navigator.of(context).pop(value),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: c.accent),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(emoji, style: const TextStyle(fontSize: 32)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(label,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onPrimaryContainer,
-                      )),
-                ),
+                Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                Text(sub, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),
-        ),
+          Icon(Icons.chevron_right_rounded, color: c.inkMuted),
+        ],
       ),
     );
   }

@@ -81,32 +81,29 @@ class SkeletonBox extends StatelessWidget {
   }
 }
 
-/// Liste için hazır bir "kart iskeleti" (geçmiş/öneri listesi yüklenirken).
+/// Liste için hazır bir "satır iskeleti" (geçmiş/öneri listesi yüklenirken).
 class SkeletonListTileCard extends StatelessWidget {
   const SkeletonListTileCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: const [
-            SkeletonBox(width: 40, height: 40, radius: 12),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SkeletonBox(width: 160, height: 18),
-                  SizedBox(height: 8),
-                  SkeletonBox(width: 100, height: 14),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: const [
+          SkeletonBox(width: 34, height: 34, radius: 10),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(width: 170, height: 16),
+                SizedBox(height: 8),
+                SkeletonBox(width: 90, height: 12),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/meal_plan.dart';
+import '../theme.dart';
 
 class LoaderOutcome {
   final MealPlan? plan;
@@ -82,16 +83,10 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final c = AppColors.of(context);
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [scheme.primaryContainer, scheme.surface],
-          ),
-        ),
+      backgroundColor: c.paper,
+      body: SizedBox.expand(
         child: SafeArea(
           child: Center(
             child: Column(
@@ -111,14 +106,8 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
                           height: 150,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: scheme.surface,
-                            boxShadow: [
-                              BoxShadow(
-                                color: scheme.shadow.withOpacity(0.15),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
+                            color: c.surface,
+                            border: Border.all(color: c.hairline),
                           ),
                         ),
                       ),
@@ -143,27 +132,26 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
                 ),
                 const SizedBox(height: 32),
                 Text('Mutfakta çalışıyoruz',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: scheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        )),
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 10),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 350),
                   child: Text(
                     _messages[_msgIndex],
                     key: ValueKey(_msgIndex),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: scheme.onPrimaryContainer.withOpacity(0.85),
-                        ),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
                 const SizedBox(height: 28),
                 SizedBox(
-                  width: 180,
+                  width: 160,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: const LinearProgressIndicator(minHeight: 6),
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      minHeight: 5,
+                      backgroundColor: c.hairline,
+                      valueColor: AlwaysStoppedAnimation(c.accent),
+                    ),
                   ),
                 ),
               ],

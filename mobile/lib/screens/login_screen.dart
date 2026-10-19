@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.soup_kitchen, size: 64, color: Color(0xFF2E7D5B)),
+                  Icon(Icons.soup_kitchen, size: 56, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 12),
                   Text('Bugün Ne Pişirsem?',
                       textAlign: TextAlign.center,

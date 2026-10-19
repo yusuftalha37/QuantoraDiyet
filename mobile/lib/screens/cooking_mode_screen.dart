@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/meal_plan.dart';
 import '../services/tts_service.dart';
-import '../widgets/glass.dart';
+import '../theme.dart';
 
-/// Adım adım pişirme modu: her ekranda tek büyük adım, İleri/Geri ve sesli okuma.
+/// Adım adım pişirme: her ekranda tek büyük adım, İleri/Geri ve sesli okuma.
 class CookingModeScreen extends StatefulWidget {
   final Meal meal;
   const CookingModeScreen({super.key, required this.meal});
@@ -28,66 +28,71 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final c = AppColors.of(context);
     final total = _steps.length;
     final last = _i == total - 1;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(title: Text(widget.meal.name)),
-      body: FrostedBackground(
-        child: SafeArea(
+      appBar: AppBar(
+        title: Text(widget.meal.name, overflow: TextOverflow.ellipsis),
+      ),
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // İlerleme
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(value: (_i + 1) / total, minHeight: 10),
+              // İlerleme: ince çizgi + "Adım x / y"
+              Row(
+                children: List.generate(total, (k) {
+                  final filled = k <= _i;
+                  return Expanded(
+                    child: Container(
+                      height: 4,
+                      margin: EdgeInsets.only(right: k == total - 1 ? 0 : 6),
+                      decoration: BoxDecoration(
+                        color: filled ? c.accent : c.hairline,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  );
+                }),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
               Text('Adım ${_i + 1} / $total',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: scheme.primary)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: c.inkMuted, letterSpacing: 0.3)),
               const SizedBox(height: 20),
 
-              // Büyük adım metni (buzlu cam panel)
+              // Büyük adım metni
               Expanded(
-                child: GlassCard(
-                  radius: 26,
-                  padding: const EdgeInsets.all(22),
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        _steps[_i],
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 26, height: 1.4),
-                      ),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: SingleChildScrollView(
+                    child: Text(
+                      _steps[_i],
+                      style: const TextStyle(fontSize: 25, height: 1.45, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
 
-              // Sesli oku
-              OutlinedButton.icon(
+              TextButton.icon(
                 onPressed: _speak,
-                icon: const Text('📢', style: TextStyle(fontSize: 22)),
+                icon: const Icon(Icons.volume_up_rounded, size: 20),
                 label: const Text('Sesli oku'),
               ),
-              const SizedBox(height: 12),
-
-              // İleri / Geri
+              const SizedBox(height: 10),
               Row(
                 children: [
-                  if (_i > 0)
+                  if (_i > 0) ...[
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => setState(() => _i--),
-                        child: const FittedBox(child: Text('← Geri')),
+                        child: const Text('Geri'),
                       ),
                     ),
-                  if (_i > 0) const SizedBox(width: 12),
+                    const SizedBox(width: 12),
+                  ],
                   Expanded(
                     flex: 2,
                     child: FilledButton(
@@ -98,21 +103,21 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
                           setState(() => _i++);
                         }
                       },
-                      child: FittedBox(child: Text(last ? '🎉 Bitti!' : 'İleri →')),
+                      child: Text(last ? 'Bitir' : 'İleri'),
                     ),
                   ),
                 ],
               ),
               if (last)
                 Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text('Afiyet olsun! 🍽️',
-                      style: TextStyle(fontSize: 16, color: scheme.primary)),
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text('Afiyet olsun!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 15, color: c.inkMuted)),
                 ),
             ],
           ),
         ),
-      ),
       ),
     );
   }
