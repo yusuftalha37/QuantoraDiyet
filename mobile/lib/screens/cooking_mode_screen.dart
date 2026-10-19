@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../models/meal_plan.dart';
 import '../services/tts_service.dart';
 import '../theme.dart';
@@ -78,7 +79,7 @@ class _CookingModeScreenState extends State<CookingModeScreen> {
 
               TextButton.icon(
                 onPressed: _speak,
-                icon: const Icon(Icons.volume_up_rounded, size: 20),
+                icon: const Icon(Symbols.volume_up, size: 20),
                 label: const Text('Sesli oku'),
               ),
               const SizedBox(height: 10),

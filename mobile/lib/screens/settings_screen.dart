@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../services/reminder_service.dart';
 import '../services/secure_store.dart';
@@ -99,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Center(child: Icon(Icons.notifications_active_outlined, size: 40, color: scheme.primary)),
+                Center(child: Icon(Symbols.notifications_active, size: 40, color: scheme.primary)),
                 const SizedBox(height: 10),
                 Text('Günlük Hatırlatma',
                     textAlign: TextAlign.center,
@@ -118,14 +119,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: _toggle,
                     title: const Text('Hatırlatma açık',
                         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                    secondary: Icon(Icons.alarm_outlined, color: scheme.primary),
+                    secondary: Icon(Symbols.alarm, color: scheme.primary),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Card(
                   child: ListTile(
                     enabled: _on,
-                    leading: const Icon(Icons.schedule_outlined),
+                    leading: const Icon(Symbols.schedule),
                     title: const Text('Saat', style: TextStyle(fontSize: 17)),
                     trailing: Text(
                       _time.format(context),
@@ -151,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       minimumSize: const Size.fromHeight(54),
                     ),
                     onPressed: _deleteAccount,
-                    icon: const Icon(Icons.delete_outline),
+                    icon: const Icon(Symbols.delete),
                     label: const Text('Hesabımı sil'),
                   ),
                 ],

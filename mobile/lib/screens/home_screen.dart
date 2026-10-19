@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../services/api_client.dart';
@@ -108,21 +109,21 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             tooltip: 'Hatırlatma',
-            icon: const Icon(Icons.notifications_none_rounded),
+            icon: const Icon(Symbols.notifications),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
             ),
           ),
           IconButton(
             tooltip: 'Mutfağım',
-            icon: const Icon(Icons.tune_rounded),
+            icon: const Icon(Symbols.tune),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const OnboardingScreen()),
             ),
           ),
           IconButton(
             tooltip: 'Çıkış',
-            icon: const Icon(Icons.logout_rounded),
+            icon: const Icon(Symbols.logout),
             onPressed: () => context.read<AppState>().logout(),
           ),
           const SizedBox(width: 4),
@@ -145,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  Icon(Icons.restaurant_rounded, size: 22),
+                  Icon(Symbols.restaurant, size: 22),
                   SizedBox(width: 10),
                   Text('Bana yemek öner'),
                 ],
@@ -183,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             else if (_failed)
               _StateMessage(
-                icon: Icons.wifi_off_rounded,
+                icon: Symbols.wifi_off,
                 title: 'Önerilerin yüklenemedi',
                 detail: 'Bağlantını kontrol edip tekrar dene.',
                 actionLabel: 'Tekrar dene',
@@ -191,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             else if (_history.isEmpty)
               _StateMessage(
-                icon: Icons.outdoor_grill_rounded,
+                icon: Symbols.outdoor_grill,
                 title: 'Henüz öneri yok',
                 detail: 'Yukarıdaki düğmeye dokun, ilk önerini alalım.',
               )
@@ -233,13 +234,13 @@ class _HistoryList extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 child: Row(
                   children: [
-                    Icon(Icons.restaurant_menu_rounded, size: 22, color: c.inkMuted),
+                    Icon(Symbols.restaurant_menu, size: 22, color: c.inkMuted),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Text('${periodLabel(items[i]['period']?.toString())} önerileri',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     ),
-                    Icon(Icons.chevron_right_rounded, size: 24, color: c.inkMuted),
+                    Icon(Symbols.chevron_right, size: 24, color: c.inkMuted),
                   ],
                 ),
               ),
@@ -309,11 +310,11 @@ class _PeriodSheet extends StatelessWidget {
             Text('Ne kadarlık öneri istersin?',
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            _option(context, Icons.wb_sunny_outlined, 'Bugün', 'Tek günlük', 'daily'),
+            _option(context, Symbols.wb_sunny, 'Bugün', 'Tek günlük', 'daily'),
             const SizedBox(height: 10),
-            _option(context, Icons.calendar_view_week_rounded, 'Bu hafta', '7 günlük', 'weekly'),
+            _option(context, Symbols.calendar_view_week, 'Bu hafta', '7 günlük', 'weekly'),
             const SizedBox(height: 10),
-            _option(context, Icons.calendar_month_rounded, 'Bu ay', '30 günlük', 'monthly'),
+            _option(context, Symbols.calendar_month, 'Bu ay', '30 günlük', 'monthly'),
           ],
         ),
       ),
@@ -338,7 +339,7 @@ class _PeriodSheet extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: c.inkMuted),
+          Icon(Symbols.chevron_right, color: c.inkMuted),
         ],
       ),
     );

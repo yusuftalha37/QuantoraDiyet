@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/meal_plan.dart';
 import '../recipes.dart';
@@ -95,7 +96,7 @@ class _PlanScreenState extends State<PlanScreen> {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => _ShoppingScreen(items: shopping)),
             ),
-            icon: const Icon(Icons.shopping_basket_outlined, size: 20),
+            icon: const Icon(Symbols.shopping_basket, size: 20),
             label: Text('Alışveriş listesi · ${shopping.length} ürün'),
           ),
           const SizedBox(height: 24),
@@ -144,14 +145,14 @@ class _ServingsRow extends StatelessWidget {
             child: Text('Kaç kişilik?',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           ),
-          _StepButton(icon: Icons.remove_rounded, onTap: servings > 1 ? () => onChanged(servings - 1) : null),
+          _StepButton(icon: Symbols.remove, onTap: servings > 1 ? () => onChanged(servings - 1) : null),
           SizedBox(
             width: 40,
             child: Text('$servings',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           ),
-          _StepButton(icon: Icons.add_rounded, onTap: servings < 20 ? () => onChanged(servings + 1) : null),
+          _StepButton(icon: Symbols.add, onTap: servings < 20 ? () => onChanged(servings + 1) : null),
         ],
       ),
     );
@@ -291,7 +292,7 @@ class _MealCard extends StatelessWidget {
                   foregroundColor: c.accent,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 ),
-                icon: const Icon(Icons.autorenew_rounded, size: 18),
+                icon: const Icon(Symbols.autorenew, size: 18),
                 label: const Text('Değiştir'),
               ),
             ],
@@ -301,7 +302,7 @@ class _MealCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.schedule_rounded, size: 17, color: c.inkMuted),
+                Icon(Symbols.schedule, size: 17, color: c.inkMuted),
                 const SizedBox(width: 6),
                 Text('${meal.prepMinutes} dakika',
                     style: TextStyle(fontSize: 14.5, color: c.inkMuted, fontWeight: FontWeight.w500)),
@@ -354,7 +355,7 @@ class _MealCard extends StatelessWidget {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => CookingModeScreen(meal: meal)),
             ),
-            icon: const Icon(Icons.local_fire_department_rounded, size: 20),
+            icon: const Icon(Symbols.local_fire_department, size: 20),
             label: const Text('Adım adım pişir'),
           ),
           const SizedBox(height: 8),
@@ -362,7 +363,7 @@ class _MealCard extends StatelessWidget {
             onPressed: () => TtsService.speak(
               meal.steps.isNotEmpty ? meal.steps.join('. ') : meal.recipe,
             ),
-            icon: const Icon(Icons.volume_up_rounded, size: 20),
+            icon: const Icon(Symbols.volume_up, size: 20),
             label: const Text('Sesli oku'),
           ),
         ],
@@ -432,7 +433,7 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_outline_rounded, size: 40, color: c.inkMuted),
+                Icon(Symbols.check_circle, size: 40, color: c.inkMuted),
                 const SizedBox(height: 14),
                 Text('Markete gerek yok',
                     textAlign: TextAlign.center,
@@ -456,7 +457,7 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         child: FilledButton.icon(
           onPressed: _share,
-          icon: const Icon(Icons.ios_share_rounded, size: 20),
+          icon: const Icon(Symbols.ios_share, size: 20),
           label: const Text('Listeyi paylaş'),
         ),
       ),
@@ -499,7 +500,7 @@ class _ShoppingScreenState extends State<_ShoppingScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          checked ? Icons.check_circle_rounded : Icons.circle_outlined,
+                          checked ? Symbols.check_circle : Symbols.circle,
                           color: checked ? c.accent : c.inkMuted,
                           size: 26,
                         ),

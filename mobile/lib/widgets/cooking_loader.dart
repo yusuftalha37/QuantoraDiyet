@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../models/meal_plan.dart';
 import '../theme.dart';
 
@@ -34,14 +35,14 @@ class _CookingLoaderScreenState extends State<CookingLoaderScreen>
 
   // Emoji yerine Material ikonlar — her telefonda tutarlı ve net görünür.
   static const _icons = <IconData>[
-    Icons.restaurant,
-    Icons.soup_kitchen,
-    Icons.ramen_dining,
-    Icons.lunch_dining,
-    Icons.local_fire_department,
-    Icons.bakery_dining,
-    Icons.outdoor_grill,
-    Icons.rice_bowl,
+    Symbols.restaurant,
+    Symbols.soup_kitchen,
+    Symbols.ramen_dining,
+    Symbols.lunch_dining,
+    Symbols.local_fire_department,
+    Symbols.bakery_dining,
+    Symbols.outdoor_grill,
+    Symbols.rice_bowl,
   ];
   static const _messages = [
     'Tencere ocağa konuyor…',

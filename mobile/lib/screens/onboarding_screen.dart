@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../models/profile.dart';
@@ -80,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
-            Center(child: Icon(Icons.restaurant_menu_rounded, size: 44, color: Theme.of(context).colorScheme.primary)),
+            Center(child: Icon(Symbols.restaurant_menu, size: 44, color: Theme.of(context).colorScheme.primary)),
             const SizedBox(height: 14),
             Text('Sana yemek önerelim',
                 textAlign: TextAlign.center,
@@ -110,7 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               clipBehavior: Clip.antiAlias,
               child: ExpansionTile(
                 shape: const Border(),
-                leading: const Icon(Icons.tune_rounded),
+                leading: const Icon(Symbols.tune),
                 title: const Text('İstersen kendin seç',
                     style: TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: const Text('(isteğe bağlı)'),
@@ -222,7 +223,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.filledTonal(onPressed: add, icon: const Icon(Icons.add)),
+            IconButton.filledTonal(onPressed: add, icon: const Icon(Symbols.add)),
           ],
         ),
         const SizedBox(height: 8),

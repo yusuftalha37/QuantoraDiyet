@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../services/api_client.dart';
@@ -68,14 +69,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 TextFormField(
                   controller: _name,
-                  decoration: const InputDecoration(labelText: 'Ad', prefixIcon: Icon(Icons.person_outline)),
+                  decoration: const InputDecoration(labelText: 'Ad', prefixIcon: Icon(Symbols.person)),
                   validator: (v) => (v == null || v.trim().length < 2) ? 'İsim en az 2 karakter' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'E-posta', prefixIcon: Icon(Icons.mail_outline)),
+                  decoration: const InputDecoration(labelText: 'E-posta', prefixIcon: Icon(Symbols.mail)),
                   validator: (v) => (v == null || !v.contains('@')) ? 'Geçerli bir e-posta girin' : null,
                 ),
                 const SizedBox(height: 16),
@@ -84,10 +85,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscure,
                   decoration: InputDecoration(
                     labelText: 'Parola',
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(Symbols.lock),
                     helperText: 'En az 10 karakter, büyük/küçük harf ve rakam',
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(_obscure ? Symbols.visibility : Symbols.visibility_off),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../config.dart';
@@ -85,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.soup_kitchen, size: 56, color: Theme.of(context).colorScheme.primary),
+                  Icon(Symbols.soup_kitchen, size: 56, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 12),
                   Text('Bugün Ne Pişirsem?',
                       textAlign: TextAlign.center,
@@ -99,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
                     autofillHints: const [AutofillHints.email],
-                    decoration: const InputDecoration(labelText: 'E-posta', prefixIcon: Icon(Icons.mail_outline)),
+                    decoration: const InputDecoration(labelText: 'E-posta', prefixIcon: Icon(Symbols.mail)),
                     validator: (v) => (v == null || !v.contains('@')) ? 'Geçerli bir e-posta girin' : null,
                   ),
                   const SizedBox(height: 16),
@@ -108,9 +109,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscure,
                     decoration: InputDecoration(
                       labelText: 'Parola',
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Symbols.lock),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                        icon: Icon(_obscure ? Symbols.visibility : Symbols.visibility_off),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
@@ -138,14 +139,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     FilledButton.tonalIcon(
                       onPressed: _loading ? null : _google,
-                      icon: const Icon(Icons.login),
+                      icon: const Icon(Symbols.login),
                       label: const Text('Google ile giriş yap'),
                     ),
                   ],
                   const SizedBox(height: 4),
                   OutlinedButton.icon(
                     onPressed: _loading ? null : () => context.read<AppState>().enterDemo(),
-                    icon: const Icon(Icons.visibility_outlined),
+                    icon: const Icon(Symbols.visibility),
                     label: const FittedBox(child: Text('Demo olarak dene (giriş yapmadan)')),
                   ),
                 ],
